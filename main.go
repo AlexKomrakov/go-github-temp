@@ -1,9 +1,7 @@
-package main
+package gohub
 
-import (
-	"fmt"
-)
+import ()
 
-func main() {
-	fmt.Print("hello world")
+func main() string {
+	return "hello world"
 }

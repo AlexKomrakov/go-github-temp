@@ -2,8 +2,9 @@ package gohub
 
 import (
 	"testing"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestTranslate(t *testing.T){
-
+func TestMain(t *testing.T){
+	assert.Equal(t, main() , "hello world")
 }

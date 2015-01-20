@@ -13,7 +13,7 @@ func TestExecuteSSh(t *testing.T) {
 	config := &ssh.ClientConfig{
 		User: "komrakov",
 		Auth: []ssh.AuthMethod{
-			ssh.Password("31IXdDDu"),
+			ssh.Password(""),
 		},
 	}
 	// Dial your ssh server.

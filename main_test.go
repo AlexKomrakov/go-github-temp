@@ -9,25 +9,26 @@ import (
 	"testing"
 )
 
-func TestTest(t *testing.T) {
-	assert.Equal(t, test(), "hello world")
-}
-
 func TestConnect(t *testing.T) {
 	hook := new(github.Hook)
-	json.Unmarshal([]byte(`{"name": "web", "active": false, "events": ["pull_request"],	"config": {	"url": "http://requestb.in/1c8ldr11"}}`), &hook)
+	json.Unmarshal([]byte(`{"name": "web", "active": false, "events": ["pull_request"],	"config": {	"url": "http://requestb.in/1c8ldr11"}}`), &new(github.Hook))
 	//	fmt.Print(hook)
 
-	token := "389924dc1c4981bdd9ffce7bb6de96f7ce18faef" // https://gist.github.com/AlexKomrakov/a55a5867b17eed3057ac
+	token := "" // https://gist.github.com/AlexKomrakov/a55a5867b17eed3057ac
 	transport := &oauth.Transport{
 		Token: &oauth.Token{AccessToken: token},
 	}
 	client := github.NewClient(transport.Client())
 	fmt.Print(client.Repositories.CreateHook("alexkomrakov", "gohub", hook))
 
-	client.Repositories
+	status := new(github.RepoStatus)
+	json.Unmarshal([]byte(`{"state": "success"}`), &status)
+	_, b, _ := client.Repositories.CreateStatus("alexkomrakov", "gohub", "", status)
+	fmt.Println(b)
 
-	//	options :=& github.ListOptions{1,5}
-	//	res, _, _ := client.Repositories.ListHooks("alexkomrakov", "gohub", options)
-	//	fmt.Println(res)
+	listOptions := new(github.ListOptions)
+	json.Unmarshal([]byte(`{"page": 0, "perPage": 5}`), &listOptions)
+	z, c, _ := client.Repositories.ListStatuses("alexkomrakov", "gohub", "", listOptions)
+	fmt.Println(z)
+	fmt.Println(c)
 }

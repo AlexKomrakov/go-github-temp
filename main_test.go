@@ -25,6 +25,8 @@ func TestConnect(t *testing.T) {
 	client := github.NewClient(transport.Client())
 	fmt.Print(client.Repositories.CreateHook("alexkomrakov", "gohub", hook))
 
+	client.Repositories
+
 	//	options :=& github.ListOptions{1,5}
 	//	res, _, _ := client.Repositories.ListHooks("alexkomrakov", "gohub", options)
 	//	fmt.Println(res)

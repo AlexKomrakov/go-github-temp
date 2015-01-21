@@ -32,3 +32,5 @@ func TestConnect(t *testing.T) {
 	fmt.Println(z)
 	fmt.Println(c)
 }
+
+func TestReadConfig(t *testing.T)

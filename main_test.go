@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/google/go-github/github"
 	//	"github.com/stretchr/testify/assert"
-	"golang.org/x/crypto/ssh"
 	"testing"
 )
 
@@ -34,18 +33,12 @@ func TestConnect(t *testing.T) {
 }
 
 func TestReadFile(t *testing.T) {
-	token := github_token
-	owner := github_user
-	repo := github_repo
-	branch := github_ref
-	filename := deploy_config
-
 	transport := &oauth.Transport{
-		Token: &oauth.Token{AccessToken: token},
+		Token: &oauth.Token{AccessToken: github_token},
 	}
 	client := github.NewClient(transport.Client())
 
-	content, _ := getGithubFileContent(client, owner, repo, filename, branch)
+	content, _ := getGithubFileContent(client, github_user, github_repo, deploy_config, github_ref)
 	fmt.Print(string(content))
 
 	conf, _ := readYamlConfig(content)
@@ -53,18 +46,23 @@ func TestReadFile(t *testing.T) {
 }
 
 func TestExecSshCommand(t *testing.T) {
-	config := &ssh.ClientConfig{
-		User: ssh_user,
-		Auth: []ssh.AuthMethod{
-			ssh.Password(ssh_pass),
-		},
-	}
-	client, err := ssh.Dial("tcp", "komrakov-stage.smart-crowd.ru:22", config)
-	if err != nil {
-		fmt.Printf("unable to connect: %s", err)
-	}
+	client := getSshClient()
 	defer client.Close()
 
 	out, _ := execSshCommand(client, "git")
 	fmt.Print(out.String())
+}
+
+func TestRunCommands(t *testing.T) {
+	transport := &oauth.Transport{
+		Token: &oauth.Token{AccessToken: github_token},
+	}
+	client := github.NewClient(transport.Client())
+
+	content, _ := getGithubFileContent(client, github_user, github_repo, deploy_config, github_ref)
+	fmt.Print(string(content))
+
+	conf, _ := readYamlConfig(content)
+
+	runCommands(client, conf)
 }

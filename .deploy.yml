@@ -2,7 +2,7 @@ host:
   - komrakov-stage.smart-crowd.ru
 commands:
   - status: pending #pending, success, error, or failure.
-  - ssh: wheris git
+  - ssh: whereis git
   - status: success
 #    reg: git
 #    ok:

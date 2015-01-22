@@ -3,8 +3,9 @@ host:
 commands:
   - status: pending #pending, success, error, or failure.
   - ssh: wheris git
-    reg: git
-    ok:
-      - status: success
-    err:
-      - status: error
+  - status: success
+#    reg: git
+#    ok:
+#      - status: success
+#    err:
+#      - status: error

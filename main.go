@@ -109,6 +109,7 @@ func runCommands(client *github.Client, config ymlConfig) {
 		switch v := command.(type) {
 		case map[interface{}]interface{}:
 			ma := command.(map[interface{}]interface{})
+			setGitStatus(client, "pending")
 			for commandType, action := range ma {
 				actionStr := action.(string)
 				if commandType == "status" {
@@ -120,15 +121,10 @@ func runCommands(client *github.Client, config ymlConfig) {
 					fmt.Println(err.String())
 				}
 			}
+			setGitStatus(client, "success")
 		default:
 			Error.Printf("Error on run yaml config commands. %v", v)
 		}
-
-		//
-		//		fmt.Print(command)
-		//
-		//		str := command.(string)
-		//		out, _ := execSshCommand(client, str)
 	}
 }
 
@@ -222,10 +218,10 @@ func execSshCommand(client *ssh.Client, command string) (bytes.Buffer, bytes.Buf
 	var errBuf bytes.Buffer
 	session.Stdout = &outBuf
 	session.Stderr = &errBuf
-	session.Run(command) //TODO Check error
-	//	if err2 != nil {
-	//		panic("Failed to run: " + err2.Error())
-	//	}
+	err2 := session.Run(command) //TODO Check error
+	if err2 != nil {
+		panic("Error: " + err2.Error())
+	}
 
 	return outBuf, errBuf
 }

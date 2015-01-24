@@ -1,4 +1,4 @@
 host:
-  - komrakov-stage.smart-crowd.ru
+  - komrakov@komrakov-stage.smart-crowd.ru
 commands:
   - ssh: whereis git

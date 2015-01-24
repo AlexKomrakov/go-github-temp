@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"strings"
 	"code.google.com/p/goauth2/oauth"
 	"encoding/json"
 	"fmt"
@@ -19,26 +20,39 @@ import (
 )
 
 const (
-	server   = "localhost:8080"
-	log_file = "/gohub.log"
+	config_file = ".config.yml"
 
 	github_user  = "alexkomrakov"
 	github_repo  = "gohub"
-	github_ref   = "fe66d4fd869c82487b64b25ac85c6b278de4356br"
+	github_ref   = "87dafdec25a7e38f5b69f4268efac3ab869b076f"
 	github_token = "" // https://gist.github.com/AlexKomrakov/38323424693224a3c03d
 
-	ssh_host = "komrakov-stage.smart-crowd.ru:22"
-	ssh_user = "komrakov"
-
-	deploy_config = ".deploy.yml"
+	ssh_host = "komrakov@komrakov-stage.smart-crowd.ru:22"
 )
 
 var (
 	Error *log.Logger
 )
 
+func readConfig() (map[string]string) {
+	b, err := ioutil.ReadFile(config_file)
+	if err != nil {
+		panic(err)
+	}
+
+	var config map[string]string
+	err2 := yaml.Unmarshal(b, &config)
+	if err2 != nil {
+		fmt.Println("Error on reading yaml config")
+	}
+
+	return config
+}
+
 func main() {
-	file := loggerInit(log_file)
+	config := readConfig()
+
+	file := loggerInit(config["log_file"])
 	defer file.Close()
 
 	router := mux.NewRouter()
@@ -46,7 +60,7 @@ func main() {
 	router.HandleFunc("/github", githubHandler)
 
 	http.Handle("/", router)
-	err := http.ListenAndServe(server, nil)
+	err := http.ListenAndServe(config["server"], nil)
 	if err != nil {
 		Error.Println("Error on starting server: %v", err)
 	}
@@ -82,13 +96,13 @@ func getGithubFileContent(client *github.Client, owner, repo, filename, branch s
 	repoOptions := &github.RepositoryContentGetOptions{branch}
 	a, _, _, err1 := client.Repositories.GetContents(owner, repo, filename, repoOptions)
 	if err1 != nil {
-		Error.Println("Error on getting file from github: %v", err1)
+		fmt.Println("Error on getting file from github: %v", err1)
 		return nil, err1
 	}
 
 	fileContent, err2 := a.Decode()
 	if err2 != nil {
-		Error.Println("Error on decoding file from github: %v", err2)
+		fmt.Println("Error on decoding file from github: %v", err2)
 		return nil, err2
 	}
 
@@ -101,7 +115,7 @@ type ymlConfig struct {
 }
 
 func runCommands(client *github.Client, config ymlConfig) {
-	sshClient := getSshClient()
+	sshClient := getSshClient(config.Host[0].(string))
 	defer sshClient.Close()
 
 	for _, command := range config.Commands {
@@ -160,10 +174,10 @@ func loggerInit(filename string) (file *os.File) {
 	if err2 != nil {
 		fmt.Print("Error opening file: %v", err2)
 	}
-	err3 := f.Truncate(0)
-	if err3 != nil {
-		fmt.Print("Error on clearing log file: %v", err3)
-	}
+//	err3 := f.Truncate(0)
+//	if err3 != nil {
+//		fmt.Print("Error on clearing log file: %v", err3)
+//	}
 
 	Error = log.New(f, "", log.Ldate|log.Ltime|log.Lshortfile)
 	Error.Println("Logger start")
@@ -172,20 +186,27 @@ func loggerInit(filename string) (file *os.File) {
 }
 
 //TODO Defer close
-func getSshClient() *ssh.Client {
+func getSshClient(user_host string) *ssh.Client {
 	key, err := getKeyFile()
 	if err != nil {
 		panic(err)
 	}
 
+	params := strings.Split(user_host, "@")
+	if len(params) != 2 {
+		panic("Wrong ssh user@host in config: " + user_host)
+	}
+	user := params[0]
+	host := params[1]
+
 	config := &ssh.ClientConfig{
-		User: ssh_user,
+		User: user,
 		Auth: []ssh.AuthMethod{
 			// ssh.Password(ssh_pass),
 			ssh.PublicKeys(key),
 		},
 	}
-	client, err := ssh.Dial("tcp", ssh_host, config)
+	client, err := ssh.Dial("tcp", host, config)
 	if err != nil {
 		fmt.Printf("unable to connect: %s", err)
 	}

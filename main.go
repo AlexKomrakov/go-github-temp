@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"strings"
-	"code.google.com/p/goauth2/oauth"
+	//"code.google.com/p/goauth2/oauth"
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-github/github"
@@ -17,21 +17,17 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"code.google.com/p/goauth2/oauth"
 )
 
 const (
 	config_file = ".config.yml"
-
-	github_user  = "alexkomrakov"
-	github_repo  = "gohub"
-	github_ref   = "87dafdec25a7e38f5b69f4268efac3ab869b076f"
-	github_token = "" // https://gist.github.com/AlexKomrakov/38323424693224a3c03d
-
-	ssh_host = "komrakov@komrakov-stage.smart-crowd.ru:22"
+	deploy_file = ".deploy.yml"
 )
 
 var (
-	Error *log.Logger
+	Error        *log.Logger
+	github_token  string
 )
 
 func readConfig() (map[string]string) {
@@ -51,6 +47,7 @@ func readConfig() (map[string]string) {
 
 func main() {
 	config := readConfig()
+	github_token = config["github_token"]
 
 	file := loggerInit(config["log_file"])
 	defer file.Close()
@@ -67,34 +64,48 @@ func main() {
 }
 
 func githubHandler(w http.ResponseWriter, req *http.Request) {
-	io.WriteString(w, "Hello github")
+	body := req.FormValue("payload")
+//	body := `{"action":"opened","number":5,"pull_request":{"url":"https://api.github.com/repos/AlexKomrakov/gohub/pulls/5","id":27982242,"html_url":"https://github.com/AlexKomrakov/gohub/pull/5","diff_url":"https://github.com/AlexKomrakov/gohub/pull/5.diff","patch_url":"https://github.com/AlexKomrakov/gohub/pull/5.patch","issue_url":"https://api.github.com/repos/AlexKomrakov/gohub/issues/5","number":5,"state":"open","locked":false,"title":"+ save","user":{"login":"AlexKomrakov","id":7386252,"avatar_url":"https://avatars.githubusercontent.com/u/7386252?v=3","gravatar_id":"","url":"https://api.github.com/users/AlexKomrakov","html_url":"https://github.com/AlexKomrakov","followers_url":"https://api.github.com/users/AlexKomrakov/followers","following_url":"https://api.github.com/users/AlexKomrakov/following{/other_user}","gists_url":"https://api.github.com/users/AlexKomrakov/gists{/gist_id}","starred_url":"https://api.github.com/users/AlexKomrakov/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/AlexKomrakov/subscriptions","organizations_url":"https://api.github.com/users/AlexKomrakov/orgs","repos_url":"https://api.github.com/users/AlexKomrakov/repos","events_url":"https://api.github.com/users/AlexKomrakov/events{/privacy}","received_events_url":"https://api.github.com/users/AlexKomrakov/received_events","type":"User","site_admin":false},"body":"","created_at":"2015-01-24T21:01:22Z","updated_at":"2015-01-24T21:01:22Z","closed_at":null,"merged_at":null,"merge_commit_sha":null,"assignee":null,"milestone":null,"commits_url":"https://api.github.com/repos/AlexKomrakov/gohub/pulls/5/commits","review_comments_url":"https://api.github.com/repos/AlexKomrakov/gohub/pulls/5/comments","review_comment_url":"https://api.github.com/repos/AlexKomrakov/gohub/pulls/comments/{number}","comments_url":"https://api.github.com/repos/AlexKomrakov/gohub/issues/5/comments","statuses_url":"https://api.github.com/repos/AlexKomrakov/gohub/statuses/35c18d42f4ff038e7503125b1263dddccb6e3204","head":{"label":"AlexKomrakov:config","ref":"config","sha":"35c18d42f4ff038e7503125b1263dddccb6e3204","user":{"login":"AlexKomrakov","id":7386252,"avatar_url":"https://avatars.githubusercontent.com/u/7386252?v=3","gravatar_id":"","url":"https://api.github.com/users/AlexKomrakov","html_url":"https://github.com/AlexKomrakov","followers_url":"https://api.github.com/users/AlexKomrakov/followers","following_url":"https://api.github.com/users/AlexKomrakov/following{/other_user}","gists_url":"https://api.github.com/users/AlexKomrakov/gists{/gist_id}","starred_url":"https://api.github.com/users/AlexKomrakov/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/AlexKomrakov/subscriptions","organizations_url":"https://api.github.com/users/AlexKomrakov/orgs","repos_url":"https://api.github.com/users/AlexKomrakov/repos","events_url":"https://api.github.com/users/AlexKomrakov/events{/privacy}","received_events_url":"https://api.github.com/users/AlexKomrakov/received_events","type":"User","site_admin":false},"repo":{"id":29361502,"name":"gohub","full_name":"AlexKomrakov/gohub","owner":{"login":"AlexKomrakov","id":7386252,"avatar_url":"https://avatars.githubusercontent.com/u/7386252?v=3","gravatar_id":"","url":"https://api.github.com/users/AlexKomrakov","html_url":"https://github.com/AlexKomrakov","followers_url":"https://api.github.com/users/AlexKomrakov/followers","following_url":"https://api.github.com/users/AlexKomrakov/following{/other_user}","gists_url":"https://api.github.com/users/AlexKomrakov/gists{/gist_id}","starred_url":"https://api.github.com/users/AlexKomrakov/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/AlexKomrakov/subscriptions","organizations_url":"https://api.github.com/users/AlexKomrakov/orgs","repos_url":"https://api.github.com/users/AlexKomrakov/repos","events_url":"https://api.github.com/users/AlexKomrakov/events{/privacy}","received_events_url":"https://api.github.com/users/AlexKomrakov/received_events","type":"User","site_admin":false},"private":false,"html_url":"https://github.com/AlexKomrakov/gohub","description":"","fork":false,"url":"https://api.github.com/repos/AlexKomrakov/gohub","forks_url":"https://api.github.com/repos/AlexKomrakov/gohub/forks","keys_url":"https://api.github.com/repos/AlexKomrakov/gohub/keys{/key_id}","collaborators_url":"https://api.github.com/repos/AlexKomrakov/gohub/collaborators{/collaborator}","teams_url":"https://api.github.com/repos/AlexKomrakov/gohub/teams","hooks_url":"https://api.github.com/repos/AlexKomrakov/gohub/hooks","issue_events_url":"https://api.github.com/repos/AlexKomrakov/gohub/issues/events{/number}","events_url":"https://api.github.com/repos/AlexKomrakov/gohub/events","assignees_url":"https://api.github.com/repos/AlexKomrakov/gohub/assignees{/user}","branches_url":"https://api.github.com/repos/AlexKomrakov/gohub/branches{/branch}","tags_url":"https://api.github.com/repos/AlexKomrakov/gohub/tags","blobs_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/blobs{/sha}","git_tags_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/tags{/sha}","git_refs_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/refs{/sha}","trees_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/trees{/sha}","statuses_url":"https://api.github.com/repos/AlexKomrakov/gohub/statuses/{sha}","languages_url":"https://api.github.com/repos/AlexKomrakov/gohub/languages","stargazers_url":"https://api.github.com/repos/AlexKomrakov/gohub/stargazers","contributors_url":"https://api.github.com/repos/AlexKomrakov/gohub/contributors","subscribers_url":"https://api.github.com/repos/AlexKomrakov/gohub/subscribers","subscription_url":"https://api.github.com/repos/AlexKomrakov/gohub/subscription","commits_url":"https://api.github.com/repos/AlexKomrakov/gohub/commits{/sha}","git_commits_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/commits{/sha}","comments_url":"https://api.github.com/repos/AlexKomrakov/gohub/comments{/number}","issue_comment_url":"https://api.github.com/repos/AlexKomrakov/gohub/issues/comments/{number}","contents_url":"https://api.github.com/repos/AlexKomrakov/gohub/contents/{+path}","compare_url":"https://api.github.com/repos/AlexKomrakov/gohub/compare/{base}...{head}","merges_url":"https://api.github.com/repos/AlexKomrakov/gohub/merges","archive_url":"https://api.github.com/repos/AlexKomrakov/gohub/{archive_format}{/ref}","downloads_url":"https://api.github.com/repos/AlexKomrakov/gohub/downloads","issues_url":"https://api.github.com/repos/AlexKomrakov/gohub/issues{/number}","pulls_url":"https://api.github.com/repos/AlexKomrakov/gohub/pulls{/number}","milestones_url":"https://api.github.com/repos/AlexKomrakov/gohub/milestones{/number}","notifications_url":"https://api.github.com/repos/AlexKomrakov/gohub/notifications{?since,all,participating}","labels_url":"https://api.github.com/repos/AlexKomrakov/gohub/labels{/name}","releases_url":"https://api.github.com/repos/AlexKomrakov/gohub/releases{/id}","created_at":"2015-01-16T18:21:40Z","updated_at":"2015-01-23T19:29:59Z","pushed_at":"2015-01-24T21:01:11Z","git_url":"git://github.com/AlexKomrakov/gohub.git","ssh_url":"git@github.com:AlexKomrakov/gohub.git","clone_url":"https://github.com/AlexKomrakov/gohub.git","svn_url":"https://github.com/AlexKomrakov/gohub","homepage":null,"size":236,"stargazers_count":0,"watchers_count":0,"language":"Go","has_issues":true,"has_downloads":true,"has_wiki":true,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":2,"forks":0,"open_issues":2,"watchers":0,"default_branch":"master"}},"base":{"label":"AlexKomrakov:master","ref":"master","sha":"87dafdec25a7e38f5b69f4268efac3ab869b076f","user":{"login":"AlexKomrakov","id":7386252,"avatar_url":"https://avatars.githubusercontent.com/u/7386252?v=3","gravatar_id":"","url":"https://api.github.com/users/AlexKomrakov","html_url":"https://github.com/AlexKomrakov","followers_url":"https://api.github.com/users/AlexKomrakov/followers","following_url":"https://api.github.com/users/AlexKomrakov/following{/other_user}","gists_url":"https://api.github.com/users/AlexKomrakov/gists{/gist_id}","starred_url":"https://api.github.com/users/AlexKomrakov/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/AlexKomrakov/subscriptions","organizations_url":"https://api.github.com/users/AlexKomrakov/orgs","repos_url":"https://api.github.com/users/AlexKomrakov/repos","events_url":"https://api.github.com/users/AlexKomrakov/events{/privacy}","received_events_url":"https://api.github.com/users/AlexKomrakov/received_events","type":"User","site_admin":false},"repo":{"id":29361502,"name":"gohub","full_name":"AlexKomrakov/gohub","owner":{"login":"AlexKomrakov","id":7386252,"avatar_url":"https://avatars.githubusercontent.com/u/7386252?v=3","gravatar_id":"","url":"https://api.github.com/users/AlexKomrakov","html_url":"https://github.com/AlexKomrakov","followers_url":"https://api.github.com/users/AlexKomrakov/followers","following_url":"https://api.github.com/users/AlexKomrakov/following{/other_user}","gists_url":"https://api.github.com/users/AlexKomrakov/gists{/gist_id}","starred_url":"https://api.github.com/users/AlexKomrakov/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/AlexKomrakov/subscriptions","organizations_url":"https://api.github.com/users/AlexKomrakov/orgs","repos_url":"https://api.github.com/users/AlexKomrakov/repos","events_url":"https://api.github.com/users/AlexKomrakov/events{/privacy}","received_events_url":"https://api.github.com/users/AlexKomrakov/received_events","type":"User","site_admin":false},"private":false,"html_url":"https://github.com/AlexKomrakov/gohub","description":"","fork":false,"url":"https://api.github.com/repos/AlexKomrakov/gohub","forks_url":"https://api.github.com/repos/AlexKomrakov/gohub/forks","keys_url":"https://api.github.com/repos/AlexKomrakov/gohub/keys{/key_id}","collaborators_url":"https://api.github.com/repos/AlexKomrakov/gohub/collaborators{/collaborator}","teams_url":"https://api.github.com/repos/AlexKomrakov/gohub/teams","hooks_url":"https://api.github.com/repos/AlexKomrakov/gohub/hooks","issue_events_url":"https://api.github.com/repos/AlexKomrakov/gohub/issues/events{/number}","events_url":"https://api.github.com/repos/AlexKomrakov/gohub/events","assignees_url":"https://api.github.com/repos/AlexKomrakov/gohub/assignees{/user}","branches_url":"https://api.github.com/repos/AlexKomrakov/gohub/branches{/branch}","tags_url":"https://api.github.com/repos/AlexKomrakov/gohub/tags","blobs_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/blobs{/sha}","git_tags_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/tags{/sha}","git_refs_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/refs{/sha}","trees_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/trees{/sha}","statuses_url":"https://api.github.com/repos/AlexKomrakov/gohub/statuses/{sha}","languages_url":"https://api.github.com/repos/AlexKomrakov/gohub/languages","stargazers_url":"https://api.github.com/repos/AlexKomrakov/gohub/stargazers","contributors_url":"https://api.github.com/repos/AlexKomrakov/gohub/contributors","subscribers_url":"https://api.github.com/repos/AlexKomrakov/gohub/subscribers","subscription_url":"https://api.github.com/repos/AlexKomrakov/gohub/subscription","commits_url":"https://api.github.com/repos/AlexKomrakov/gohub/commits{/sha}","git_commits_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/commits{/sha}","comments_url":"https://api.github.com/repos/AlexKomrakov/gohub/comments{/number}","issue_comment_url":"https://api.github.com/repos/AlexKomrakov/gohub/issues/comments/{number}","contents_url":"https://api.github.com/repos/AlexKomrakov/gohub/contents/{+path}","compare_url":"https://api.github.com/repos/AlexKomrakov/gohub/compare/{base}...{head}","merges_url":"https://api.github.com/repos/AlexKomrakov/gohub/merges","archive_url":"https://api.github.com/repos/AlexKomrakov/gohub/{archive_format}{/ref}","downloads_url":"https://api.github.com/repos/AlexKomrakov/gohub/downloads","issues_url":"https://api.github.com/repos/AlexKomrakov/gohub/issues{/number}","pulls_url":"https://api.github.com/repos/AlexKomrakov/gohub/pulls{/number}","milestones_url":"https://api.github.com/repos/AlexKomrakov/gohub/milestones{/number}","notifications_url":"https://api.github.com/repos/AlexKomrakov/gohub/notifications{?since,all,participating}","labels_url":"https://api.github.com/repos/AlexKomrakov/gohub/labels{/name}","releases_url":"https://api.github.com/repos/AlexKomrakov/gohub/releases{/id}","created_at":"2015-01-16T18:21:40Z","updated_at":"2015-01-23T19:29:59Z","pushed_at":"2015-01-24T21:01:11Z","git_url":"git://github.com/AlexKomrakov/gohub.git","ssh_url":"git@github.com:AlexKomrakov/gohub.git","clone_url":"https://github.com/AlexKomrakov/gohub.git","svn_url":"https://github.com/AlexKomrakov/gohub","homepage":null,"size":236,"stargazers_count":0,"watchers_count":0,"language":"Go","has_issues":true,"has_downloads":true,"has_wiki":true,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":2,"forks":0,"open_issues":2,"watchers":0,"default_branch":"master"}},"_links":{"self":{"href":"https://api.github.com/repos/AlexKomrakov/gohub/pulls/5"},"html":{"href":"https://github.com/AlexKomrakov/gohub/pull/5"},"issue":{"href":"https://api.github.com/repos/AlexKomrakov/gohub/issues/5"},"comments":{"href":"https://api.github.com/repos/AlexKomrakov/gohub/issues/5/comments"},"review_comments":{"href":"https://api.github.com/repos/AlexKomrakov/gohub/pulls/5/comments"},"review_comment":{"href":"https://api.github.com/repos/AlexKomrakov/gohub/pulls/comments/{number}"},"commits":{"href":"https://api.github.com/repos/AlexKomrakov/gohub/pulls/5/commits"},"statuses":{"href":"https://api.github.com/repos/AlexKomrakov/gohub/statuses/35c18d42f4ff038e7503125b1263dddccb6e3204"}},"merged":false,"mergeable":null,"mergeable_state":"unknown","merged_by":null,"comments":0,"review_comments":0,"commits":1,"additions":78,"deletions":58,"changed_files":5},"repository":{"id":29361502,"name":"gohub","full_name":"AlexKomrakov/gohub","owner":{"login":"AlexKomrakov","id":7386252,"avatar_url":"https://avatars.githubusercontent.com/u/7386252?v=3","gravatar_id":"","url":"https://api.github.com/users/AlexKomrakov","html_url":"https://github.com/AlexKomrakov","followers_url":"https://api.github.com/users/AlexKomrakov/followers","following_url":"https://api.github.com/users/AlexKomrakov/following{/other_user}","gists_url":"https://api.github.com/users/AlexKomrakov/gists{/gist_id}","starred_url":"https://api.github.com/users/AlexKomrakov/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/AlexKomrakov/subscriptions","organizations_url":"https://api.github.com/users/AlexKomrakov/orgs","repos_url":"https://api.github.com/users/AlexKomrakov/repos","events_url":"https://api.github.com/users/AlexKomrakov/events{/privacy}","received_events_url":"https://api.github.com/users/AlexKomrakov/received_events","type":"User","site_admin":false},"private":false,"html_url":"https://github.com/AlexKomrakov/gohub","description":"","fork":false,"url":"https://api.github.com/repos/AlexKomrakov/gohub","forks_url":"https://api.github.com/repos/AlexKomrakov/gohub/forks","keys_url":"https://api.github.com/repos/AlexKomrakov/gohub/keys{/key_id}","collaborators_url":"https://api.github.com/repos/AlexKomrakov/gohub/collaborators{/collaborator}","teams_url":"https://api.github.com/repos/AlexKomrakov/gohub/teams","hooks_url":"https://api.github.com/repos/AlexKomrakov/gohub/hooks","issue_events_url":"https://api.github.com/repos/AlexKomrakov/gohub/issues/events{/number}","events_url":"https://api.github.com/repos/AlexKomrakov/gohub/events","assignees_url":"https://api.github.com/repos/AlexKomrakov/gohub/assignees{/user}","branches_url":"https://api.github.com/repos/AlexKomrakov/gohub/branches{/branch}","tags_url":"https://api.github.com/repos/AlexKomrakov/gohub/tags","blobs_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/blobs{/sha}","git_tags_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/tags{/sha}","git_refs_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/refs{/sha}","trees_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/trees{/sha}","statuses_url":"https://api.github.com/repos/AlexKomrakov/gohub/statuses/{sha}","languages_url":"https://api.github.com/repos/AlexKomrakov/gohub/languages","stargazers_url":"https://api.github.com/repos/AlexKomrakov/gohub/stargazers","contributors_url":"https://api.github.com/repos/AlexKomrakov/gohub/contributors","subscribers_url":"https://api.github.com/repos/AlexKomrakov/gohub/subscribers","subscription_url":"https://api.github.com/repos/AlexKomrakov/gohub/subscription","commits_url":"https://api.github.com/repos/AlexKomrakov/gohub/commits{/sha}","git_commits_url":"https://api.github.com/repos/AlexKomrakov/gohub/git/commits{/sha}","comments_url":"https://api.github.com/repos/AlexKomrakov/gohub/comments{/number}","issue_comment_url":"https://api.github.com/repos/AlexKomrakov/gohub/issues/comments/{number}","contents_url":"https://api.github.com/repos/AlexKomrakov/gohub/contents/{+path}","compare_url":"https://api.github.com/repos/AlexKomrakov/gohub/compare/{base}...{head}","merges_url":"https://api.github.com/repos/AlexKomrakov/gohub/merges","archive_url":"https://api.github.com/repos/AlexKomrakov/gohub/{archive_format}{/ref}","downloads_url":"https://api.github.com/repos/AlexKomrakov/gohub/downloads","issues_url":"https://api.github.com/repos/AlexKomrakov/gohub/issues{/number}","pulls_url":"https://api.github.com/repos/AlexKomrakov/gohub/pulls{/number}","milestones_url":"https://api.github.com/repos/AlexKomrakov/gohub/milestones{/number}","notifications_url":"https://api.github.com/repos/AlexKomrakov/gohub/notifications{?since,all,participating}","labels_url":"https://api.github.com/repos/AlexKomrakov/gohub/labels{/name}","releases_url":"https://api.github.com/repos/AlexKomrakov/gohub/releases{/id}","created_at":"2015-01-16T18:21:40Z","updated_at":"2015-01-23T19:29:59Z","pushed_at":"2015-01-24T21:01:11Z","git_url":"git://github.com/AlexKomrakov/gohub.git","ssh_url":"git@github.com:AlexKomrakov/gohub.git","clone_url":"https://github.com/AlexKomrakov/gohub.git","svn_url":"https://github.com/AlexKomrakov/gohub","homepage":null,"size":236,"stargazers_count":0,"watchers_count":0,"language":"Go","has_issues":true,"has_downloads":true,"has_wiki":true,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":2,"forks":0,"open_issues":2,"watchers":0,"default_branch":"master"},"sender":{"login":"AlexKomrakov","id":7386252,"avatar_url":"https://avatars.githubusercontent.com/u/7386252?v=3","gravatar_id":"","url":"https://api.github.com/users/AlexKomrakov","html_url":"https://github.com/AlexKomrakov","followers_url":"https://api.github.com/users/AlexKomrakov/followers","following_url":"https://api.github.com/users/AlexKomrakov/following{/other_user}","gists_url":"https://api.github.com/users/AlexKomrakov/gists{/gist_id}","starred_url":"https://api.github.com/users/AlexKomrakov/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/AlexKomrakov/subscriptions","organizations_url":"https://api.github.com/users/AlexKomrakov/orgs","repos_url":"https://api.github.com/users/AlexKomrakov/repos","events_url":"https://api.github.com/users/AlexKomrakov/events{/privacy}","received_events_url":"https://api.github.com/users/AlexKomrakov/received_events","type":"User","site_admin":false}}`
+	var data map[string]interface {}
+	json.Unmarshal([]byte(body), &data)
+
+	pull_request := data["pull_request"].(map[string]interface {})
+	head := pull_request["head"].(map[string]interface {})
+	sha := head["sha"].(string)
+	fmt.Println(sha)
+
+	repository := data["repository"].(map[string]interface {})
+	repo_name := repository["name"].(string)
+	fmt.Println(repo_name)
+
+	owner := repository["owner"].(map[string]interface {})
+	owner_name := owner["login"].(string)
+	fmt.Println(owner_name)
+
+	currentBranch := branch{owner_name, repo_name, sha}
 
 	transport := &oauth.Transport{
 		Token: &oauth.Token{AccessToken: github_token},
 	}
 	client := github.NewClient(transport.Client())
 
-	listOptions := new(github.ListOptions)
-	json.Unmarshal([]byte(`{"page": 0, "perPage": 5}`), &listOptions)
-	z, c, _ := client.Repositories.ListStatuses(github_user, github_repo, github_ref, listOptions)
+	content, _ := getGithubFileContent(client, currentBranch, deploy_file)
+	conf, _ := readYamlConfig(content)
 
-	io.WriteString(w, fmt.Sprintf("%v", z))
-	io.WriteString(w, fmt.Sprintf("%v", c))
-
-	setGitStatus(client, "success")
+	runCommands(client, currentBranch, conf)
 }
 
-func setGitStatus(client *github.Client, state string) {
+func setGitStatus(client *github.Client, br branch, state string) {
 	context := "continuous-integration/gorgon-ci"
 	status := &github.RepoStatus{State: &state, Context: &context}
-	_, resp, err := client.Repositories.CreateStatus(github_user, github_repo, github_ref, status)
+	_, resp, err := client.Repositories.CreateStatus(br.Owner, br.Repo, br.Sha, status)
 	fmt.Print(resp)
 	fmt.Print(err)
 }
 
-func getGithubFileContent(client *github.Client, owner, repo, filename, branch string) ([]byte, error) {
-	repoOptions := &github.RepositoryContentGetOptions{branch}
-	a, _, _, err1 := client.Repositories.GetContents(owner, repo, filename, repoOptions)
+func getGithubFileContent(client *github.Client, br branch, filename string) ([]byte, error) {
+	repoOptions := &github.RepositoryContentGetOptions{br.Sha}
+	a, _, _, err1 := client.Repositories.GetContents(br.Owner, br.Repo, filename, repoOptions)
 	if err1 != nil {
 		fmt.Println("Error on getting file from github: %v", err1)
 		return nil, err1
@@ -114,7 +125,13 @@ type ymlConfig struct {
 	Commands []interface{}
 }
 
-func runCommands(client *github.Client, config ymlConfig) {
+type branch struct {
+	Owner string
+	Repo  string
+	Sha   string
+}
+
+func runCommands(client *github.Client, br branch, config ymlConfig) {
 	sshClient := getSshClient(config.Host[0].(string))
 	defer sshClient.Close()
 
@@ -123,11 +140,11 @@ func runCommands(client *github.Client, config ymlConfig) {
 		switch v := command.(type) {
 		case map[interface{}]interface{}:
 			ma := command.(map[interface{}]interface{})
-			setGitStatus(client, "pending")
+			setGitStatus(client, br, "pending")
 			for commandType, action := range ma {
 				actionStr := action.(string)
 				if commandType == "status" {
-					setGitStatus(client, actionStr)
+					setGitStatus(client, br, actionStr)
 				}
 				if commandType == "ssh" {
 					out, err := execSshCommand(sshClient, actionStr)
@@ -135,7 +152,7 @@ func runCommands(client *github.Client, config ymlConfig) {
 					fmt.Println(err.String())
 				}
 			}
-			setGitStatus(client, "success")
+			setGitStatus(client, br, "success")
 		default:
 			Error.Printf("Error on run yaml config commands. %v", v)
 		}
@@ -174,10 +191,10 @@ func loggerInit(filename string) (file *os.File) {
 	if err2 != nil {
 		fmt.Print("Error opening file: %v", err2)
 	}
-//	err3 := f.Truncate(0)
-//	if err3 != nil {
-//		fmt.Print("Error on clearing log file: %v", err3)
-//	}
+	err3 := f.Truncate(0)
+	if err3 != nil {
+		fmt.Print("Error on clearing log file: %v", err3)
+	}
 
 	Error = log.New(f, "", log.Ldate|log.Ltime|log.Lshortfile)
 	Error.Println("Logger start")

@@ -4,5 +4,3 @@ log_file: /gohub.log
 github_user: alexkomrakov
 github_repo: gohub
 github_token: # https://gist.github.com/AlexKomrakov/38323424693224a3c03d
-
-deploy_config: .deploy.yml

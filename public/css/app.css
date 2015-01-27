@@ -1,0 +1,21 @@
+.uk-navbar {
+    background-color: #0B2C3C;
+    padding: 10px 0;
+    color: #fff;
+}
+
+.uk-navbar-brand, .uk-navbar-brand:hover {
+    color: #fff;
+}
+
+.section {
+    padding: 120px 0;
+}
+
+.section-colored {
+    background-color: #FF6666;
+}
+
+h2 {
+    color: #fff;
+}

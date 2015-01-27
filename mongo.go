@@ -11,12 +11,6 @@ const (
 	database = "gohub"
 )
 
-type Repository struct {
-	User       string
-	Repository string
-	Token      string
-}
-
 //TODO defer session.Close()
 func getDb() (*mgo.Database) {
 	session, err := mgo.Dial(url)

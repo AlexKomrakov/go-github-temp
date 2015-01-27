@@ -1,74 +1,52 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title></title>
-    <link rel="stylesheet" href="/uikit/css/uikit.min.css" />
-    <link rel="stylesheet" href="/css/app.css" />
-    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
-    <script src="/js/angular-1.3.11/angular.min.js"></script>
-    <script src="/js/app.js"></script>
-    <script src="/uikit/js/uikit.min.js"></script>
-</head>
-<body ng-app="gohub">
+<div class="section section-colored">
+    <div class="uk-container uk-container-center uk-text-center">
 
-    <nav class="uk-navbar uk-navbar-attached">
-        <div class="uk-container uk-container-center">
-            <a class="uk-navbar-brand uk-hidden-small" href="/">Home</a>
-        </div>
-    </nav>
+        <h2>Add GitHub repository</h2>
+        <form class="uk-form">
+            <div class="uk-form-row">
+                <input class="uk-form-width-large" type="text" placeholder="User">
+            </div>
+            <div class="uk-form-row">
+                <input class="uk-form-width-large" type="text" placeholder="Repository">
+            </div>
+            <div class="uk-form-row">
+                <input class="uk-form-width-large" type="text" placeholder="GitHub token">
+            </div>
+            <div class="uk-form-row">
+                <button class="uk-button" type="button">Add repository</button>
+            </div>
+        </form>
 
-    <div class="section section-colored">
-        <div class="uk-container uk-container-center uk-text-center">
-
-            <h2>Add GitHub repository</h2>
-            <form class="uk-form">
-                <div class="uk-form-row">
-                    <input class="uk-form-width-large" type="text" placeholder="User">
-                </div>
-                <div class="uk-form-row">
-                    <input class="uk-form-width-large" type="text" placeholder="Repository">
-                </div>
-                <div class="uk-form-row">
-                    <input class="uk-form-width-large" type="text" placeholder="GitHub token">
-                </div>
-                <div class="uk-form-row">
-                    <button class="uk-button" type="button">Add repository</button>
-                </div>
-            </form>
-
-        </div>
     </div>
+</div>
 
-    <div class="section">
-        <div class="uk-container uk-container-center">
+<div class="section">
+    <div class="uk-container uk-container-center">
 
-            <table class="uk-table uk-table-striped">
-                <caption>Active repositories</caption>
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Repository</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!--<tr>-->
-                        <!--<td>12312223</td>-->
-                        <!--<td>12312223</td>-->
-                    <!--</tr> <tr>-->
-                        <!--<td>12312223</td>-->
-                        <!--<td>12312223</td>-->
-                    <!--</tr> <tr>-->
-                        <!--<td>12312223</td>-->
-                        <!--<td>12312223</td>-->
-                    <!--</tr> <tr>-->
-                        <!--<td>12312223</td>-->
-                        <!--<td>12312223</td>-->
-                    <!--</tr>-->
-                </tbody>
-            </table>
+        <table class="uk-table uk-table-striped">
+            <caption>Active repositories</caption>
+            <thead>
+            <tr>
+                <th>User</th>
+                <th>Repository</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!--<tr>-->
+            <!--<td>12312223</td>-->
+            <!--<td>12312223</td>-->
+            <!--</tr> <tr>-->
+            <!--<td>12312223</td>-->
+            <!--<td>12312223</td>-->
+            <!--</tr> <tr>-->
+            <!--<td>12312223</td>-->
+            <!--<td>12312223</td>-->
+            <!--</tr> <tr>-->
+            <!--<td>12312223</td>-->
+            <!--<td>12312223</td>-->
+            <!--</tr>-->
+            </tbody>
+        </table>
 
-        </div>
     </div>
-
-</body>
-</html>
+</div>

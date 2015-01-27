@@ -7,7 +7,7 @@ import (
 
 func main() {
 	m := martini.Classic()
-	m.Use(render.Renderer())
+	m.Use(render.Renderer(render.Options{Layout: "base"}))
 	m.Get("/", func(r render.Render) {
 			r.HTML(200, "index", "golang")
 		})

@@ -1,6 +1,6 @@
 <div ng-controller="reposController">
 
-    <div class="section section-colored">
+    <div class="section bg-red">
         <div class="uk-container uk-container-center uk-text-center">
 
             <h2>Add GitHub repository</h2>
@@ -28,16 +28,18 @@
             <table class="uk-table uk-table-striped">
                 <caption>Active repositories</caption>
                 <thead>
-                <tr>
-                    <th>User</th>
-                    <th>Repository</th>
-                </tr>
+                    <tr>
+                        <th>User</th>
+                        <th>Repository</th>
+                        <th>Page</th>
+                    </tr>
                 </thead>
                 <tbody>
-                <tr ng-repeat="repo in repositories.data">
-                    <td>[[repo.user]]</td>
-                    <td>[[repo.repository]]</td>
-                </tr>
+                    <tr ng-repeat="repo in repositories.data">
+                        <td>[[repo.user]]</td>
+                        <td>[[repo.repository]]</td>
+                        <td><a ng-href="/repos/[[repo.user]]/[[repo.repository]]">Link</a></td>
+                    </tr>
                 </tbody>
             </table>
 

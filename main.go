@@ -21,11 +21,15 @@ func PostReposApi (res http.ResponseWriter, req *http.Request, r render.Render) 
 		panic(err)
 	}
 	mongo.AddRepository(&repo)
-	r.JSON(200, "{status: 'ok'}")
+	r.JSON(200, map[string]string{"status": "ok"})
+}
+
+func RepoPage (params martini.Params, r render.Render) {
+	r.HTML(200, "repo", params)
 }
 
 func Index (r render.Render) {
-	r.HTML(200, "index", "golang")
+	r.HTML(200, "index", nil)
 }
 
 func main() {
@@ -35,5 +39,6 @@ func main() {
 	m.Get("/", Index)
 	m.Get("/repos", GetReposApi)
 	m.Post("/repos", PostReposApi)
+	m.Get("/repos/:user/:repo", RepoPage)
 	m.Run()
 }

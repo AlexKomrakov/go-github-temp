@@ -1,5 +1,4 @@
 .uk-navbar {
-    background-color: #0B2C3C;
     padding: 10px 0;
     color: #fff;
 }
@@ -12,10 +11,26 @@
     padding: 120px 0;
 }
 
-.section-colored {
+.section-medium {
+    padding: 60px 0;
+}
+
+.bg-red {
     background-color: #FF6666;
 }
 
-h2 {
+.bg-dark {
+    background-color: #444444;
+}
+
+.bg-light {
+    background-color: #DADFE1;
+}
+
+.bg-blue {
+    background-color: #0B2C3C;
+}
+
+.bg-red h2 {
     color: #fff;
 }

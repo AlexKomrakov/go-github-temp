@@ -1,52 +1,47 @@
-<div class="section section-colored">
-    <div class="uk-container uk-container-center uk-text-center">
+<div ng-controller="reposController">
 
-        <h2>Add GitHub repository</h2>
-        <form class="uk-form">
-            <div class="uk-form-row">
-                <input class="uk-form-width-large" type="text" placeholder="User">
-            </div>
-            <div class="uk-form-row">
-                <input class="uk-form-width-large" type="text" placeholder="Repository">
-            </div>
-            <div class="uk-form-row">
-                <input class="uk-form-width-large" type="text" placeholder="GitHub token">
-            </div>
-            <div class="uk-form-row">
-                <button class="uk-button" type="button">Add repository</button>
-            </div>
-        </form>
+    <div class="section section-colored">
+        <div class="uk-container uk-container-center uk-text-center">
 
+            <h2>Add GitHub repository</h2>
+            <form class="uk-form">
+                <div class="uk-form-row">
+                    <input class="uk-form-width-large" ng-model="repo.user" type="text" placeholder="User">
+                </div>
+                <div class="uk-form-row">
+                    <input class="uk-form-width-large" ng-model="repo.repository" type="text" placeholder="Repository">
+                </div>
+                <div class="uk-form-row">
+                    <input class="uk-form-width-large" ng-model="repo.token" type="text" placeholder="GitHub token">
+                </div>
+                <div class="uk-form-row">
+                    <button class="uk-button" type="button" ng-click="addRepository(repo)">Add repository</button>
+                </div>
+            </form>
+
+        </div>
     </div>
-</div>
 
-<div class="section">
-    <div class="uk-container uk-container-center">
+    <div class="section">
+        <div class="uk-container uk-container-center">
 
-        <table class="uk-table uk-table-striped">
-            <caption>Active repositories</caption>
-            <thead>
-            <tr>
-                <th>User</th>
-                <th>Repository</th>
-            </tr>
-            </thead>
-            <tbody>
-            <!--<tr>-->
-            <!--<td>12312223</td>-->
-            <!--<td>12312223</td>-->
-            <!--</tr> <tr>-->
-            <!--<td>12312223</td>-->
-            <!--<td>12312223</td>-->
-            <!--</tr> <tr>-->
-            <!--<td>12312223</td>-->
-            <!--<td>12312223</td>-->
-            <!--</tr> <tr>-->
-            <!--<td>12312223</td>-->
-            <!--<td>12312223</td>-->
-            <!--</tr>-->
-            </tbody>
-        </table>
+            <table class="uk-table uk-table-striped">
+                <caption>Active repositories</caption>
+                <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Repository</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="repo in repositories.data">
+                    <td>[[repo.user]]</td>
+                    <td>[[repo.repository]]</td>
+                </tr>
+                </tbody>
+            </table>
 
+        </div>
     </div>
+
 </div>

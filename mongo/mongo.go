@@ -1,4 +1,4 @@
-package main
+package mongo
 
 import (
 	mgo "gopkg.in/mgo.v2"
@@ -10,6 +10,12 @@ const (
 	collection = "repositories"
 	database = "gohub"
 )
+
+type Repository struct {
+	User       string `json:"user"`
+	Repository string `json:"repository"`
+	Token      string `json:"token"`
+}
 
 //TODO defer session.Close()
 func getDb() (*mgo.Database) {

@@ -3,6 +3,7 @@ package mongo
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
+	"fmt"
 )
 
 func TestMongo(t *testing.T) {
@@ -17,3 +18,10 @@ func TestMongo(t *testing.T) {
 	repos = GetRepositories()
 	assert.Len(t, repos, 0)
 }
+
+func TestGetRepository(t *testing.T) {
+	branch := Branch{"AlexKomrakov", "gohub", "asdsad"}
+	repo := branch.GetRepository()
+	fmt.Print(repo)
+}
+

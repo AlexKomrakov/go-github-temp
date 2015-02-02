@@ -1,0 +1,36 @@
+.uk-navbar {
+    padding: 10px 0;
+    color: #fff;
+}
+
+.uk-navbar-brand, .uk-navbar-brand:hover {
+    color: #fff;
+}
+
+.section {
+    padding: 120px 0;
+}
+
+.section-medium {
+    padding: 60px 0;
+}
+
+.bg-red {
+    background-color: #FF6666;
+}
+
+.bg-dark {
+    background-color: #444444;
+}
+
+.bg-light {
+    background-color: #DADFE1;
+}
+
+.bg-blue {
+    background-color: #0B2C3C;
+}
+
+.bg-red h2 {
+    color: #fff;
+}

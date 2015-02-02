@@ -1,3 +1,1 @@
 server: localhost:8080
-log_file: /gohub.log
-github_token:  # https://gist.github.com/AlexKomrakov/38323424693224a3c03d

@@ -1,23 +1,24 @@
 package main
 
 import (
-	"github.com/go-martini/martini"
-	"github.com/martini-contrib/render"
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"github.com/alexkomrakov/gohub/mongo"
+	"github.com/go-martini/martini"
 	"github.com/google/go-github/github"
+	"github.com/martini-contrib/render"
 	"golang.org/x/crypto/ssh"
 	yaml "gopkg.in/yaml.v2"
-	"encoding/json"
-	"net/http"
-	"fmt"
-	"strings"
-	"os/user"
 	"io/ioutil"
-	"bytes"
+	"net/http"
+	"os/user"
+	"strings"
 )
 
 const (
 	deploy_file = ".deploy.yml"
+	config_file = ".config.yml"
 )
 
 type ymlConfig struct {
@@ -89,13 +90,13 @@ func getSshClient(user_host string) *ssh.Client {
 	config := &ssh.ClientConfig{
 		User: user,
 		Auth: []ssh.AuthMethod{
-				// ssh.Password(ssh_pass),
-				ssh.PublicKeys(key),
-			},
+			// ssh.Password(ssh_pass),
+			ssh.PublicKeys(key),
+		},
 	}
 	client, err := ssh.Dial("tcp", host, config)
 	if err != nil {
-	fmt.Printf("unable to connect: %s", err)
+		fmt.Printf("unable to connect: %s", err)
 	}
 
 	return client
@@ -155,26 +156,26 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	json.Unmarshal([]byte(body), &data)
 
 	owner_name := *data.Repo.Owner.Login
-	repo_name  := *data.Repo.Name
-	sha        := *data.PullRequest.Head.SHA
+	repo_name := *data.Repo.Name
+	sha := *data.PullRequest.Head.SHA
 
-	branch     := mongo.Branch{owner_name, repo_name, sha}
-	build      := &mongo.Build{&branch, &data}
+	branch := mongo.Branch{owner_name, repo_name, sha}
+	build := &mongo.Build{&branch, &data}
 	repository := branch.GetRepository()
-	client     := repository.GetGithubClient()
+	client := repository.GetGithubClient()
 
 	content, _ := getGithubFileContent(client, branch, deploy_file)
-	conf, _    := readYamlConfig(content)
+	conf, _ := readYamlConfig(content)
 
 	runCommands(client, build, conf)
 }
 
-func GetReposApi (r render.Render) {
+func GetReposApi(r render.Render) {
 	repositories := mongo.GetRepositories()
 	r.JSON(200, repositories)
 }
 
-func PostReposApi (res http.ResponseWriter, req *http.Request, r render.Render) {
+func PostReposApi(res http.ResponseWriter, req *http.Request, r render.Render) {
 	decoder := json.NewDecoder(req.Body)
 	var repo mongo.Repository
 	err := decoder.Decode(&repo)
@@ -185,22 +186,41 @@ func PostReposApi (res http.ResponseWriter, req *http.Request, r render.Render) 
 	r.JSON(200, map[string]string{"status": "ok"})
 }
 
-func RepoPage (params martini.Params, r render.Render) {
+func RepoPage(params martini.Params, r render.Render) {
 	r.HTML(200, "repo", params)
 }
 
-func Index (r render.Render) {
+func Index(r render.Render) {
 	r.HTML(200, "index", nil)
 }
 
+type ServerConfig struct {
+	Server string
+}
+
+func readConfig() ServerConfig {
+	b, err := ioutil.ReadFile(config_file)
+	if err != nil {
+		panic(err)
+	}
+
+	var config ServerConfig
+	err2 := yaml.Unmarshal(b, &config)
+	if err2 != nil {
+		fmt.Println("Error on reading yaml config")
+	}
+
+	return config
+}
+
 func main() {
+	config := readConfig()
 	m := martini.Classic()
 	m.Use(render.Renderer(render.Options{Layout: "base"}))
-
 	m.Get("/", Index)
 	m.Get("/repos", GetReposApi)
 	m.Post("/repos", PostReposApi)
 	m.Post("/hooks", GithubHookApi)
 	m.Get("/repos/:user/:repo", RepoPage)
-	m.Run()
+	m.RunOnAddr(config.Server)
 }

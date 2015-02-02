@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"strings"
 	//"code.google.com/p/goauth2/oauth"
+	"code.google.com/p/goauth2/oauth"
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-github/github"
@@ -16,33 +17,12 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"code.google.com/p/goauth2/oauth"
-)
-
-const (
-	config_file = ".config.yml"
-	deploy_file = ".deploy.yml"
 )
 
 var (
 	Error        *log.Logger
-	github_token  string
+	github_token string
 )
-
-func readConfig() (map[string]string) {
-	b, err := ioutil.ReadFile(config_file)
-	if err != nil {
-		panic(err)
-	}
-
-	var config map[string]string
-	err2 := yaml.Unmarshal(b, &config)
-	if err2 != nil {
-		fmt.Println("Error on reading yaml config")
-	}
-
-	return config
-}
 
 func start() {
 	config := readConfig()
@@ -60,85 +40,6 @@ func start() {
 	if err != nil {
 		Error.Println("Error on starting server: %v", err)
 	}
-}
-
-func githubHandler(w http.ResponseWriter, req *http.Request) {
-	body := req.FormValue("payload")
-
-	var data github.PullRequestEvent
-	json.Unmarshal([]byte(body), &data)
-
-	owner_name := data.Repo.Owner.Login
-	repo_name  := data.Repo.Name
-	sha        := data.PullRequest.Head.SHA
-
-	currentBranch := branch{owner_name, repo_name, sha}
-
-	transport := &oauth.Transport{
-		Token: &oauth.Token{AccessToken: github_token},
-	}
-	client := github.NewClient(transport.Client())
-
-	content, _ := getGithubFileContent(client, currentBranch, deploy_file)
-	conf, _ := readYamlConfig(content)
-
-	runCommands(client, currentBranch, conf)
-}
-
-func getGithubFileContent(client *github.Client, br mongo.Branch, filename string) ([]byte, error) {
-	repoOptions := &github.RepositoryContentGetOptions{br.Sha}
-	a, _, _, err1 := client.Repositories.GetContents(br.Owner, br.Repo, filename, repoOptions)
-	if err1 != nil {
-		fmt.Println("Error on getting file from github: %v", err1)
-		return nil, err1
-	}
-
-	fileContent, err2 := a.Decode()
-	if err2 != nil {
-		fmt.Println("Error on decoding file from github: %v", err2)
-		return nil, err2
-	}
-
-	return fileContent, nil
-}
-
-func runCommands(client *github.Client, br mongo.Branch, config ymlConfig) {
-	sshClient := getSshClient(config.Host[0].(string))
-	defer sshClient.Close()
-
-	for _, command := range config.Commands {
-
-		switch v := command.(type) {
-		case map[interface{}]interface{}:
-			ma := command.(map[interface{}]interface{})
-			setGitStatus(client, br, "pending")
-			for commandType, action := range ma {
-				actionStr := action.(string)
-				if commandType == "status" {
-					setGitStatus(client, br, actionStr)
-				}
-				if commandType == "ssh" {
-					out, err := execSshCommand(sshClient, actionStr)
-					fmt.Println(out.String())
-					fmt.Println(err.String())
-				}
-			}
-			setGitStatus(client, br, "success")
-		default:
-			Error.Printf("Error on run yaml config commands. %v", v)
-		}
-	}
-}
-
-func readYamlConfig(file []byte) (ymlConfig, error) {
-	config := ymlConfig{}
-	err := yaml.Unmarshal(file, &config)
-	if err != nil {
-		Error.Println("Error on reading yaml config")
-		return config, err
-	}
-
-	return config, nil
 }
 
 func defaultHandler(w http.ResponseWriter, req *http.Request) {
@@ -172,20 +73,3 @@ func loggerInit(filename string) (file *os.File) {
 
 	return f
 }
-
-
-func getKeyFile() (key ssh.Signer, err error) {
-	usr, _ := user.Current()
-	file := usr.HomeDir + "/.ssh/id_rsa"
-	buf, err := ioutil.ReadFile(file)
-	if err != nil {
-		return
-	}
-	key, err = ssh.ParsePrivateKey(buf)
-	if err != nil {
-		return
-	}
-	return
-}
-
-

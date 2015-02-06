@@ -42,6 +42,7 @@ func getGithubFileContent(client *github.Client, br mongo.Branch, filename strin
 	return fileContent, nil
 }
 
+// Statuses: pending, success, error, or failure
 func setGitStatus(client *github.Client, br *mongo.Branch, state string) (out string, err error) {
 	context := "continuous-integration/gorgon-ci"
 	status := &github.RepoStatus{State: &state, Context: &context}
@@ -109,6 +110,7 @@ func runCommands(client *github.Client, build *mongo.Build, config ymlConfig) {
 		fmt.Println("Setting git status pending")
 		var out string
 		var err error
+		var commands []mongo.Command
 		for commandType, action := range command {
 			actionStr := action
 			if commandType == "status" {
@@ -117,11 +119,19 @@ func runCommands(client *github.Client, build *mongo.Build, config ymlConfig) {
 			if commandType == "ssh" {
 				out, err = execSshCommand(config.Host, actionStr)
 			}
-			fmt.Println(out)
-			fmt.Println(err)
+			commands = append(commands, mongo.Command{commandType, actionStr, out, err})
+			if err != nil {
+				break
+			}
 		}
-		setGitStatus(client, build.Branch, "success")
-		fmt.Println("Setting git status success")
+		fmt.Print(commands)
+		if err != nil {
+			setGitStatus(client, build.Branch, "error")
+			fmt.Println("Setting git status error")
+		} else {
+			setGitStatus(client, build.Branch, "success")
+			fmt.Println("Setting git status success")
+		}
 	}
 }
 
@@ -161,7 +171,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	sha := *data.PullRequest.Head.SHA
 
 	branch := mongo.Branch{owner_name, repo_name, sha}
-	build := &mongo.Build{&branch, &data}
+	build := &mongo.Build{&branch, &data, nil}
 	repository := branch.GetRepository()
 	client := repository.GetGithubClient()
 

@@ -29,6 +29,14 @@ func (r *Repository) GetGithubClient() *github.Client {
 type Build struct {
 	Branch *Branch                  `json:"branch,omitempty"`
 	Event  *github.PullRequestEvent `json:"event,omitempty"`
+	Info   *[]Command 				`json:"info,omitempty"`
+}
+
+type Command struct {
+	Type   string
+	Action string
+	Out    string
+	Err    error
 }
 
 type Branch struct {

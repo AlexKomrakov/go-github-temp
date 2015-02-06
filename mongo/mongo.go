@@ -10,6 +10,7 @@ import (
 const (
 	url              = "localhost"
 	repos_collection = "repositories"
+	builds_collection = "builds"
 	database         = "gohub"
 )
 
@@ -27,16 +28,16 @@ func (r *Repository) GetGithubClient() *github.Client {
 }
 
 type Build struct {
-	Branch *Branch                  `json:"branch,omitempty"`
-	Event  *github.PullRequestEvent `json:"event,omitempty"`
-	Info   *[]Command 				`json:"info,omitempty"`
+	Branch   Branch                  `json:"branch,omitempty"`
+	Event    github.PullRequestEvent `json:"event,omitempty"`
+	Commands []Command 			  `json:"commands,omitempty"`
 }
 
 type Command struct {
 	Type   string
 	Action string
 	Out    string
-	Err    error
+	Err    string
 }
 
 type Branch struct {
@@ -45,11 +46,27 @@ type Branch struct {
 	Sha   string
 }
 
-func (b *Branch) GetRepository() *Repository {
+func (b *Build) Save() {
+	c := getDb().C(builds_collection)
+	err := c.Insert(&b)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func GetBuilds(user, repo string) (builds []Build) {
+	c := getDb().C(builds_collection)
+	err := c.Find(bson.M{"branch.owner": user, "branch.repo": repo}).All(&builds)
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+func (b *Branch) GetRepository() (r *Repository) {
 	c := getDb().C(repos_collection)
-	var r *Repository
 	c.Find(bson.M{"user": b.Owner, "repository": b.Repo}).One(&r)
-	return r
+	return
 }
 
 //TODO defer session.Close()

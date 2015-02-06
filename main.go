@@ -55,6 +55,7 @@ func readYamlConfig(file []byte) (ymlConfig, error) {
 	config := ymlConfig{}
 	err := yaml.Unmarshal(file, &config)
 	if err != nil {
+		fmt.Print(err.Error())
 		panic("Error on reading yaml config")
 	}
 
@@ -104,34 +105,41 @@ func getSshClient(user_host string) (client *ssh.Client, err error) {
 	return client, err
 }
 
-func runCommands(client *github.Client, build *mongo.Build, config ymlConfig) {
+func runCommands(build *mongo.Build) {
+	var commands []mongo.Command
+	var out string
+	var err error
+
+	client := build.Branch.GetRepository().GetGithubClient()
+
+	content, _ := getGithubFileContent(client, build.Branch, deploy_file)
+	config, _ := readYamlConfig(content)
+
 	for _, command := range config.Commands {
-		setGitStatus(client, build.Branch, "pending")
-		fmt.Println("Setting git status pending")
-		var out string
-		var err error
-		var commands []mongo.Command
+		out, err = setGitStatus(client, &build.Branch, "pending")
+		commands = append(commands, mongo.Command{"status", "pending", out, err.Error()})
 		for commandType, action := range command {
 			actionStr := action
 			if commandType == "status" {
-				out, err = setGitStatus(client, build.Branch, actionStr)
+				out, err = setGitStatus(client, &build.Branch, actionStr)
 			}
 			if commandType == "ssh" {
 				out, err = execSshCommand(config.Host, actionStr)
 			}
-			commands = append(commands, mongo.Command{commandType, actionStr, out, err})
+			commands = append(commands, mongo.Command{commandType, actionStr, out, err.Error()})
 			if err != nil {
 				break
 			}
 		}
-		fmt.Print(commands)
 		if err != nil {
-			setGitStatus(client, build.Branch, "error")
-			fmt.Println("Setting git status error")
+			out, err = setGitStatus(client, &build.Branch, "error")
+			commands = append(commands, mongo.Command{"status", "error", out, err.Error()})
 		} else {
-			setGitStatus(client, build.Branch, "success")
-			fmt.Println("Setting git status success")
+			out, err = setGitStatus(client, &build.Branch, "success")
+			commands = append(commands, mongo.Command{"status", "success", out, err.Error()})
 		}
+		build.Commands = commands
+		build.Save()
 	}
 }
 
@@ -171,14 +179,9 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	sha := *data.PullRequest.Head.SHA
 
 	branch := mongo.Branch{owner_name, repo_name, sha}
-	build := &mongo.Build{&branch, &data, nil}
-	repository := branch.GetRepository()
-	client := repository.GetGithubClient()
+	build := &mongo.Build{branch, data, nil}
 
-	content, _ := getGithubFileContent(client, branch, deploy_file)
-	conf, _ := readYamlConfig(content)
-
-	runCommands(client, build, conf)
+	runCommands(build)
 }
 
 func GetReposApi(r render.Render) {
@@ -198,7 +201,12 @@ func PostReposApi(res http.ResponseWriter, req *http.Request, r render.Render) {
 }
 
 func RepoPage(params martini.Params, r render.Render) {
-	r.HTML(200, "repo", params)
+	var data map[string]interface {}
+	data = make(map[string]interface {})
+	builds := mongo.GetBuilds(params["user"], params["repo"])
+	data["params"] = params
+	data["builds"] = builds
+	r.HTML(200, "repo", data)
 }
 
 func Index(r render.Render) {

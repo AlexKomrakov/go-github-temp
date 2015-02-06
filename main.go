@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os/user"
 	"strings"
+	"errors"
 )
 
 const (
@@ -22,8 +23,8 @@ const (
 )
 
 type ymlConfig struct {
-	Host     []interface{}
-	Commands []interface{}
+	Host     string
+	Commands []map[string]string
 }
 
 func getGithubFileContent(client *github.Client, br mongo.Branch, filename string) ([]byte, error) {
@@ -41,12 +42,12 @@ func getGithubFileContent(client *github.Client, br mongo.Branch, filename strin
 	return fileContent, nil
 }
 
-func setGitStatus(client *github.Client, br *mongo.Branch, state string) {
+func setGitStatus(client *github.Client, br *mongo.Branch, state string) (out string, err error) {
 	context := "continuous-integration/gorgon-ci"
 	status := &github.RepoStatus{State: &state, Context: &context}
-	_, resp, err := client.Repositories.CreateStatus(br.Owner, br.Repo, br.Sha, status)
-	fmt.Print(resp)
-	fmt.Print(err)
+	repoStatus, _, err := client.Repositories.CreateStatus(br.Owner, br.Repo, br.Sha, status)
+	out = *repoStatus.State
+	return
 }
 
 func readYamlConfig(file []byte) (ymlConfig, error) {
@@ -74,10 +75,10 @@ func getKeyFile() (key ssh.Signer, err error) {
 }
 
 //TODO Defer close
-func getSshClient(user_host string) *ssh.Client {
+func getSshClient(user_host string) (client *ssh.Client, err error) {
 	key, err := getKeyFile()
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	params := strings.Split(user_host, "@")
@@ -94,46 +95,46 @@ func getSshClient(user_host string) *ssh.Client {
 			ssh.PublicKeys(key),
 		},
 	}
-	client, err := ssh.Dial("tcp", host, config)
+	client, err = ssh.Dial("tcp", host, config)
 	if err != nil {
-		fmt.Printf("unable to connect: %s", err)
+		return
 	}
 
-	return client
+	return client, err
 }
 
 func runCommands(client *github.Client, build *mongo.Build, config ymlConfig) {
-	sshClient := getSshClient(config.Host[0].(string))
-	defer sshClient.Close()
-
 	for _, command := range config.Commands {
-		switch v := command.(type) {
-		case map[interface{}]interface{}:
-			ma := command.(map[interface{}]interface{})
-			setGitStatus(client, build.Branch, "pending")
-			for commandType, action := range ma {
-				actionStr := action.(string)
-				if commandType == "status" {
-					setGitStatus(client, build.Branch, actionStr)
-				}
-				if commandType == "ssh" {
-					out, err := execSshCommand(sshClient, actionStr)
-					fmt.Println(out.String())
-					fmt.Println(err.String())
-					fmt.Println(v)
-				}
+		setGitStatus(client, build.Branch, "pending")
+		fmt.Println("Setting git status pending")
+		var out string
+		var err error
+		for commandType, action := range command {
+			actionStr := action
+			if commandType == "status" {
+				out, err = setGitStatus(client, build.Branch, actionStr)
 			}
-			setGitStatus(client, build.Branch, "success")
-		default:
-			panic("Error on run yaml config commands")
+			if commandType == "ssh" {
+				out, err = execSshCommand(config.Host, actionStr)
+			}
+			fmt.Println(out)
+			fmt.Println(err)
 		}
+		setGitStatus(client, build.Branch, "success")
+		fmt.Println("Setting git status success")
 	}
 }
 
-func execSshCommand(client *ssh.Client, command string) (bytes.Buffer, bytes.Buffer) {
-	session, err1 := client.NewSession()
-	if err1 != nil {
-		panic("Failed to create session: " + err1.Error())
+func execSshCommand(host string, command string) (out string, err error) {
+	client, err := getSshClient(host)
+	if err != nil {
+		return
+	}
+	defer client.Close()
+
+	session, err := client.NewSession()
+	if err != nil {
+		return
 	}
 	defer session.Close()
 
@@ -141,12 +142,12 @@ func execSshCommand(client *ssh.Client, command string) (bytes.Buffer, bytes.Buf
 	var errBuf bytes.Buffer
 	session.Stdout = &outBuf
 	session.Stderr = &errBuf
-	err2 := session.Run(command) //TODO Check error
-	if err2 != nil {
-		panic("Error: " + err2.Error())
+	err = session.Run(command) //TODO Check error
+	if err != nil {
+		return
 	}
 
-	return outBuf, errBuf
+	return outBuf.String(), errors.New(errBuf.String())
 }
 
 func GithubHookApi(w http.ResponseWriter, req *http.Request) {

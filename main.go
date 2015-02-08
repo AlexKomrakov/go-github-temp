@@ -48,7 +48,7 @@ func setGitStatus(client *github.Client, br *mongo.Branch, state string) (out st
 	context := "continuous-integration/gorgon-ci"
 	status := &github.RepoStatus{State: &state, Context: &context}
 	repoStatus, _, err := client.Repositories.CreateStatus(br.Owner, br.Repo, br.Sha, status)
-	out = *repoStatus.State
+	out = "Success. New github branch status: " + *repoStatus.State
 	return
 }
 

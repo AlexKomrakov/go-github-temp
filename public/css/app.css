@@ -34,3 +34,11 @@
 .bg-red h2 {
     color: #fff;
 }
+
+.bg-black {
+    background-color: #000;
+}
+
+.text-white {
+    color: #fff;
+}

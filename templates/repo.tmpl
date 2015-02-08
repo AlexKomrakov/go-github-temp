@@ -15,13 +15,15 @@
                 <caption>Events</caption>
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>Commit</th>
                         <th>Build Id</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {{ range $build := .builds }}
+                    {{ range $index, $build := .builds }}
                     <tr {{if $.params.build}}{{if eq $.params.build $build.GetId}} class="uk-text-bold"{{end}}{{end}}>
+                        <td>{{$index}}</td>
                         <td>
                             <a target="_blank" href="https://github.com/{{ $build.Branch.Owner }}/{{ $build.Branch.Repo }}/commit/{{ $build.Branch.Sha }}">
                                 <i class="uk-icon-github"></i>
@@ -39,20 +41,18 @@
             </table>
 
             {{ if .build.Commands }}
-            <table class="uk-table uk-margin-large-top">
-                <caption>Build log</caption>
-                <thead>
-                <tr>
-                    <th width="15%">Command type</th>
-                    <th width="15%">Action</th>
-                    <th>Out</th>
-                </tr>
+            <table class="uk-table uk-margin-large-top bg-black text-white uk-table-condensed">
+                <thead class="bg-dark">
+                    <tr>
+                        <th width="15%">Build log</th>
+                    </tr>
                 </thead>
                 <tbody>
                     {{ range $a, $build := .build.Commands }}
                     <tr>
-                        <td>{{ $build.Type }}</td>
-                        <td>{{ $build.Action }}</td>
+                        <td>> {{ $build.Type }}: {{ $build.Action }}</td>
+                    </tr>
+                    <tr>
                         <td>
                             {{ $build.Out }}
                             <span class="uk-text-danger">{{ $build.Err }}</span>

@@ -30,14 +30,19 @@ func (r *Repository) GetGithubClient() *github.Client {
 type Build struct {
 	Branch   Branch                  `json:"branch,omitempty"`
 	Event    github.PullRequestEvent `json:"event,omitempty"`
-	Commands []Command 			  `json:"commands,omitempty"`
+	Commands []Command 			     `json:"commands,omitempty"`
+	Id       bson.ObjectId           `json:"id,omitempty" bson:"_id,omitempty"`
+}
+
+func (b *Build) GetId() string {
+	return b.Id.Hex()
 }
 
 type Command struct {
-	Type   string
-	Action string
-	Out    string
-	Err    string
+	Type   string `json:"type,omitempty"`
+	Action string `json:"action,omitempty"`
+	Out    string `json:"out,omitempty"`
+	Err    string `json:"err,omitempty"`
 }
 
 type Branch struct {
@@ -57,6 +62,15 @@ func (b *Build) Save() {
 func GetBuilds(user, repo string) (builds []Build) {
 	c := getDb().C(builds_collection)
 	err := c.Find(bson.M{"branch.owner": user, "branch.repo": repo}).All(&builds)
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+func GetBuild(id string) (build Build) {
+	c := getDb().C(builds_collection)
+	err := c.Find(bson.M{"_id": bson.ObjectIdHex(id)}).One(&build)
 	if err != nil {
 		panic(err)
 	}

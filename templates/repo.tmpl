@@ -1,34 +1,67 @@
 <div>
 
-    <div class="section-medium">
-        <div class="uk-container uk-container-center ">
+    <div class="section-medium bg-light">
+        <div class="uk-container uk-container-center">
 
             <h2>{{ .params.user }} / {{ .params.repo }}</h2>
-            <a href="#" class="uk-icon-button uk-icon-github"></a> Set github pull-request hook
+            <!--<a href="#" class="uk-icon-button uk-icon-github"></a> Set github pull-request hook-->
 
         </div>
     </div>
-    {{ .builds }}
     <div class="section-medium">
         <div class="uk-container uk-container-center ">
 
             <table class="uk-table uk-table-striped">
-                <caption>Pull requests</caption>
+                <caption>Events</caption>
                 <thead>
                     <tr>
-                        <th>Build</th>
-                        <th>Message</th>
                         <th>Commit</th>
+                        <th>Build Id</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>2</td>
-                        <td>3</td>
+                    {{ range $build := .builds }}
+                    <tr {{if $.params.build}}{{if eq $.params.build $build.GetId}} class="uk-text-bold"{{end}}{{end}}>
+                        <td>
+                            <a target="_blank" href="https://github.com/{{ $build.Branch.Owner }}/{{ $build.Branch.Repo }}/commit/{{ $build.Branch.Sha }}">
+                                <i class="uk-icon-github"></i>
+                            </a>
+                            {{ $build.Branch.Sha }}
+                        </td>
+                        <td>
+                            <a href="/repos/{{ $build.Branch.Owner }}/{{ $build.Branch.Repo }}/{{ $build.GetId }}">
+                                {{ $build.GetId }}
+                            </a>
+                        </td>
                     </tr>
+                    {{ end }}
                 </tbody>
             </table>
+
+            {{ if .build.Commands }}
+            <table class="uk-table uk-margin-large-top">
+                <caption>Build log</caption>
+                <thead>
+                <tr>
+                    <th width="15%">Command type</th>
+                    <th width="15%">Action</th>
+                    <th>Out</th>
+                </tr>
+                </thead>
+                <tbody>
+                    {{ range $a, $build := .build.Commands }}
+                    <tr>
+                        <td>{{ $build.Type }}</td>
+                        <td>{{ $build.Action }}</td>
+                        <td>
+                            {{ $build.Out }}
+                            <span class="uk-text-danger">{{ $build.Err }}</span>
+                        </td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+            {{end}}
 
         </div>
     </div>

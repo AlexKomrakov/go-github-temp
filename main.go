@@ -15,6 +15,7 @@ import (
 	"os/user"
 	"strings"
 	"errors"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -117,7 +118,11 @@ func runCommands(build *mongo.Build) {
 
 	for _, command := range config.Commands {
 		out, err = setGitStatus(client, &build.Branch, "pending")
-		commands = append(commands, mongo.Command{"status", "pending", out, err.Error()})
+		if err != nil {
+			commands = append(commands, mongo.Command{"status", "pending", out, err.Error()})
+		} else {
+			commands = append(commands, mongo.Command{Type: "status", Action: "pending", Out: out})
+		}
 		for commandType, action := range command {
 			actionStr := action
 			if commandType == "status" {
@@ -126,17 +131,27 @@ func runCommands(build *mongo.Build) {
 			if commandType == "ssh" {
 				out, err = execSshCommand(config.Host, actionStr)
 			}
-			commands = append(commands, mongo.Command{commandType, actionStr, out, err.Error()})
 			if err != nil {
+				commands = append(commands, mongo.Command{commandType, actionStr, out, err.Error()})
 				break
+			} else {
+				commands = append(commands, mongo.Command{Type: commandType, Action: actionStr, Out: out})
 			}
 		}
 		if err != nil {
 			out, err = setGitStatus(client, &build.Branch, "error")
-			commands = append(commands, mongo.Command{"status", "error", out, err.Error()})
+			if err != nil {
+				commands = append(commands, mongo.Command{"status", "error", out, err.Error()})
+			} else {
+				commands = append(commands, mongo.Command{Type: "status", Action: "error", Out: out})
+			}
 		} else {
 			out, err = setGitStatus(client, &build.Branch, "success")
-			commands = append(commands, mongo.Command{"status", "success", out, err.Error()})
+			if err != nil {
+				commands = append(commands, mongo.Command{"status", "success", out, err.Error()})
+			} else {
+				commands = append(commands, mongo.Command{Type: "status", Action: "success", Out: out})
+			}
 		}
 		build.Commands = commands
 		build.Save()
@@ -179,7 +194,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	sha := *data.PullRequest.Head.SHA
 
 	branch := mongo.Branch{owner_name, repo_name, sha}
-	build := &mongo.Build{branch, data, nil}
+	build := &mongo.Build{branch, data, nil, bson.NewObjectId()}
 
 	runCommands(build)
 }
@@ -201,11 +216,17 @@ func PostReposApi(res http.ResponseWriter, req *http.Request, r render.Render) {
 }
 
 func RepoPage(params martini.Params, r render.Render) {
-	var data map[string]interface {}
-	data = make(map[string]interface {})
-	builds := mongo.GetBuilds(params["user"], params["repo"])
+	data := make(map[string]interface {})
 	data["params"] = params
-	data["builds"] = builds
+	data["builds"] = mongo.GetBuilds(params["user"], params["repo"])
+	r.HTML(200, "repo", data)
+}
+
+func BuildPage(params martini.Params, r render.Render) {
+	data := make(map[string]interface {})
+	data["params"] = params
+	data["builds"] = mongo.GetBuilds(params["user"], params["repo"])
+	data["build"] = mongo.GetBuild(params["build"])
 	r.HTML(200, "repo", data)
 }
 
@@ -241,5 +262,6 @@ func main() {
 	m.Post("/repos", PostReposApi)
 	m.Post("/hooks", GithubHookApi)
 	m.Get("/repos/:user/:repo", RepoPage)
+	m.Get("/repos/:user/:repo/:build", BuildPage)
 	m.RunOnAddr(config.Server)
 }

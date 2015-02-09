@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	url              = "localhost"
-	repos_collection = "repositories"
+	url               = "localhost"
+	repos_collection  = "repositories"
 	builds_collection = "builds"
-	database         = "gohub"
+	database          = "gohub"
 )
 
 type Repository struct {

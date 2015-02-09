@@ -23,6 +23,8 @@ const (
 	config_file = ".config.yml"
 )
 
+var config ServerConfig
+
 type ymlConfig struct {
 	Host     string
 	Commands []map[string]string
@@ -44,11 +46,14 @@ func getGithubFileContent(client *github.Client, br mongo.Branch, filename strin
 }
 
 // Statuses: pending, success, error, or failure
-func setGitStatus(client *github.Client, br *mongo.Branch, state string) (out string, err error) {
+func setGitStatus(client *github.Client, build *mongo.Build, state string) (out string, err error) {
+	br := build.Branch
 	context := "continuous-integration/gorgon-ci"
-	status := &github.RepoStatus{State: &state, Context: &context}
+	url := config.Hostname + "/repos/" + br.Owner + "/" + br.Repo + "/" + build.Id.Hex()
+	fmt.Print(url)
+	status  := &github.RepoStatus{State: &state, Context: &context, URL: &url}
 	repoStatus, _, err := client.Repositories.CreateStatus(br.Owner, br.Repo, br.Sha, status)
-	out = "Success. New github branch status: " + *repoStatus.State
+	out = "Success. Current github branch status: " + *repoStatus.State
 	return
 }
 
@@ -114,10 +119,10 @@ func runCommands(build *mongo.Build) {
 	client := build.Branch.GetRepository().GetGithubClient()
 
 	content, _ := getGithubFileContent(client, build.Branch, deploy_file)
-	config, _ := readYamlConfig(content)
+	config, _  := readYamlConfig(content)
 
 	for _, command := range config.Commands {
-		out, err = setGitStatus(client, &build.Branch, "pending")
+		out, err = setGitStatus(client, build, "pending")
 		if err != nil {
 			commands = append(commands, mongo.Command{"status", "pending", out, err.Error()})
 		} else {
@@ -126,7 +131,7 @@ func runCommands(build *mongo.Build) {
 		for commandType, action := range command {
 			actionStr := action
 			if commandType == "status" {
-				out, err = setGitStatus(client, &build.Branch, actionStr)
+				out, err = setGitStatus(client, build, actionStr)
 			}
 			if commandType == "ssh" {
 				out, err = execSshCommand(config.Host, actionStr)
@@ -139,14 +144,14 @@ func runCommands(build *mongo.Build) {
 			}
 		}
 		if err != nil {
-			out, err = setGitStatus(client, &build.Branch, "error")
+			out, err = setGitStatus(client, build, "error")
 			if err != nil {
 				commands = append(commands, mongo.Command{"status", "error", out, err.Error()})
 			} else {
 				commands = append(commands, mongo.Command{Type: "status", Action: "error", Out: out})
 			}
 		} else {
-			out, err = setGitStatus(client, &build.Branch, "success")
+			out, err = setGitStatus(client, build, "success")
 			if err != nil {
 				commands = append(commands, mongo.Command{"status", "success", out, err.Error()})
 			} else {
@@ -235,7 +240,8 @@ func Index(r render.Render) {
 }
 
 type ServerConfig struct {
-	Server string
+	Server   string
+	Hostname string
 }
 
 func readConfig() ServerConfig {
@@ -254,7 +260,7 @@ func readConfig() ServerConfig {
 }
 
 func main() {
-	config := readConfig()
+	config = readConfig()
 	m := martini.Classic()
 	m.Use(render.Renderer(render.Options{Layout: "base"}))
 	m.Get("/", Index)

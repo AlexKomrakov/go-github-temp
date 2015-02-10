@@ -47,12 +47,10 @@ func getGithubFileContent(client *github.Client, br mongo.Branch, filename strin
 
 // Statuses: pending, success, error, or failure
 func setGitStatus(client *github.Client, build *mongo.Build, state string) (out string, err error) {
-	br := build.Branch
 	context := "continuous-integration/gorgon-ci"
-	url := config.Hostname + "/repos/" + br.Owner + "/" + br.Repo + "/" + build.Id.Hex()
-	fmt.Print(url)
+	url := config.Hostname + "/repos/" + build.Branch.Owner + "/" + build.Branch.Repo + "/" + build.Id.Hex()
 	status  := &github.RepoStatus{State: &state, Context: &context, URL: &url}
-	repoStatus, _, err := client.Repositories.CreateStatus(br.Owner, br.Repo, br.Sha, status)
+	repoStatus, _, err := client.Repositories.CreateStatus(build.Branch.Owner, build.Branch.Repo, build.Branch.Sha, status)
 	out = "Success. Current github branch status: " + *repoStatus.State
 	return
 }
@@ -76,9 +74,6 @@ func getKeyFile() (key ssh.Signer, err error) {
 		return
 	}
 	key, err = ssh.ParsePrivateKey(buf)
-	if err != nil {
-		return
-	}
 	return
 }
 
@@ -119,6 +114,7 @@ func runCommands(build *mongo.Build) {
 	client := build.Branch.GetRepository().GetGithubClient()
 
 	content, _ := getGithubFileContent(client, build.Branch, deploy_file)
+	content = []byte(strings.Replace(string(content), "{{sha}}", build.Branch.Sha, -1))
 	config, _  := readYamlConfig(content)
 
 	for _, command := range config.Commands {

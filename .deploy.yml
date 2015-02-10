@@ -1,3 +1,6 @@
 host: komrakov@komrakov-stage.smart-crowd.ru
 commands:
   - ssh: whereis git
+  - ssh: cd /
+  - ssh: ls
+  - ssh: wheris {{sha}}

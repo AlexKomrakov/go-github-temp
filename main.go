@@ -189,7 +189,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 
 	var data github.PullRequestEvent
 	json.Unmarshal([]byte(body), &data)
-
+ 
 	owner_name := *data.Repo.Owner.Login
 	repo_name := *data.Repo.Name
 	sha := *data.PullRequest.Head.SHA

@@ -3,19 +3,19 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/alexkomrakov/gohub/mongo"
 	"github.com/go-martini/martini"
 	"github.com/google/go-github/github"
 	"github.com/martini-contrib/render"
 	"golang.org/x/crypto/ssh"
+	"gopkg.in/mgo.v2/bson"
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
 	"os/user"
 	"strings"
-	"errors"
-	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -49,7 +49,7 @@ func getGithubFileContent(client *github.Client, br mongo.Branch, filename strin
 func setGitStatus(client *github.Client, build *mongo.Build, state string) (out string, err error) {
 	context := "continuous-integration/gorgon-ci"
 	url := config.Hostname + "/repos/" + build.Branch.Owner + "/" + build.Branch.Repo + "/" + build.Id.Hex()
-	status  := &github.RepoStatus{State: &state, Context: &context, URL: &url}
+	status := &github.RepoStatus{State: &state, Context: &context, TargetURL: &url}
 	repoStatus, _, err := client.Repositories.CreateStatus(build.Branch.Owner, build.Branch.Repo, build.Branch.Sha, status)
 	out = "Success. Current github branch status: " + *repoStatus.State
 	return
@@ -115,7 +115,7 @@ func runCommands(build *mongo.Build) {
 
 	content, _ := getGithubFileContent(client, build.Branch, deploy_file)
 	content = []byte(strings.Replace(string(content), "{{sha}}", build.Branch.Sha, -1))
-	config, _  := readYamlConfig(content)
+	config, _ := readYamlConfig(content)
 
 	for _, command := range config.Commands {
 		out, err = setGitStatus(client, build, "pending")
@@ -217,14 +217,14 @@ func PostReposApi(res http.ResponseWriter, req *http.Request, r render.Render) {
 }
 
 func RepoPage(params martini.Params, r render.Render) {
-	data := make(map[string]interface {})
+	data := make(map[string]interface{})
 	data["params"] = params
 	data["builds"] = mongo.GetBuilds(params["user"], params["repo"])
 	r.HTML(200, "repo", data)
 }
 
 func BuildPage(params martini.Params, r render.Render) {
-	data := make(map[string]interface {})
+	data := make(map[string]interface{})
 	data["params"] = params
 	data["builds"] = mongo.GetBuilds(params["user"], params["repo"])
 	data["build"] = mongo.GetBuild(params["build"])

@@ -48,7 +48,7 @@ func getGithubFileContent(client *github.Client, br mongo.Branch, filename strin
 // Statuses: pending, success, error, or failure
 func setGitStatus(client *github.Client, build *mongo.Build, state string) (out string, err error) {
 	context := "continuous-integration/gorgon-ci"
-	url := config.Hostname + "/repos/" + build.Branch.Owner + "/" + build.Branch.Repo + "/" + build.Id.Hex()
+	url := config.Adress + "/repos/" + build.Branch.Owner + "/" + build.Branch.Repo + "/" + build.Id.Hex()
 	status := &github.RepoStatus{State: &state, Context: &context, TargetURL: &url}
 	repoStatus, _, err := client.Repositories.CreateStatus(build.Branch.Owner, build.Branch.Repo, build.Branch.Sha, status)
 	out = "Success. Current github branch status: " + *repoStatus.State
@@ -189,7 +189,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 
 	var data github.PullRequestEvent
 	json.Unmarshal([]byte(body), &data)
- 
+
 	owner_name := *data.Repo.Owner.Login
 	repo_name := *data.Repo.Name
 	sha := *data.PullRequest.Head.SHA
@@ -236,8 +236,8 @@ func Index(r render.Render) {
 }
 
 type ServerConfig struct {
-	Server   string
-	Hostname string
+	Server string
+	Adress string
 }
 
 func readConfig() ServerConfig {

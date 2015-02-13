@@ -191,7 +191,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	case "pull_request":
 		var data github.PullRequestEvent
 		json.Unmarshal([]byte(body), &data)
-		actions := map[string]bool{"opened":true, "reopened":true, "synchronize":true}
+		actions := map[string]bool{"opened": true, "reopened": true, "synchronize": true}
 		if actions[*data.Action] {
 			branch := mongo.Branch{*data.Repo.Owner.Login, *data.Repo.Name, *data.PullRequest.Head.SHA}
 			build := &mongo.Build{branch, data, nil, bson.NewObjectId()}

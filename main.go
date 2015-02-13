@@ -189,10 +189,10 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 
 	switch req.Header["X-Github-Event"][0] {
 	case "pull_request":
-		var data github.PullRequestEvent
-		json.Unmarshal([]byte(body), &data)
+		var pullRequestEvent github.PullRequestEvent
+		json.Unmarshal([]byte(body), &pullRequestEvent)
 		actions := map[string]bool{"opened": true, "reopened": true, "synchronize": true}
-		if actions[*data.Action] {
+		if actions[*pullRequestEvent.Action] {
 			branch := mongo.Branch{*data.Repo.Owner.Login, *data.Repo.Name, *data.PullRequest.Head.SHA}
 			build := &mongo.Build{branch, data, nil, bson.NewObjectId()}
 			runCommands(build)
@@ -200,6 +200,10 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 			fmt.Print("Skipping pull request event type: " + *data.Action)
 		}
 	case "push":
+		var pushEvent github.PushEvent
+		json.Unmarshal([]byte(body), &pushEvent)
+		fmt.Println(pushEvent.Head)
+		fmt.Println(pushEvent.Ref)
 		fmt.Println("Recieved push event")
 	default:
 		fmt.Println("Not supported event: " + req.Header["X-Github-Event"][0])

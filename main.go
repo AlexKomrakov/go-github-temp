@@ -193,8 +193,8 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 		json.Unmarshal([]byte(body), &pullRequestEvent)
 		actions := map[string]bool{"opened": true, "reopened": true, "synchronize": true}
 		if actions[*pullRequestEvent.Action] {
-			branch := mongo.Branch{*data.Repo.Owner.Login, *data.Repo.Name, *data.PullRequest.Head.SHA}
-			build := &mongo.Build{branch, data, nil, bson.NewObjectId()}
+			branch := mongo.Branch{*pullRequestEvent.Repo.Owner.Login, *pullRequestEvent.Repo.Name, *pullRequestEvent.PullRequest.Head.SHA}
+			build := &mongo.Build{branch, pullRequestEvent, nil, bson.NewObjectId()}
 			runCommands(build)
 		} else {
 			fmt.Print("Skipping pull request event type: " + *data.Action)

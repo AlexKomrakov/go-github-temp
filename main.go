@@ -154,9 +154,9 @@ func runCommands(build *mongo.Build) {
 				commands = append(commands, mongo.Command{Type: "status", Action: "success", Out: out})
 			}
 		}
-		build.Commands = commands
-		build.Save()
 	}
+	build.Commands = commands
+	build.Save()
 }
 
 func execSshCommand(host string, command string) (out string, err error) {

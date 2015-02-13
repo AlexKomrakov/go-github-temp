@@ -187,7 +187,8 @@ func execSshCommand(host string, command string) (out string, err error) {
 func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	body := req.FormValue("payload")
 
-	fmt.Println(req.Header)
+	fmt.Println(req.Header["X-Github-Event"])
+	fmt.Println(req.Header["X-Github-Event"][0])
 	fmt.Println(body)
 
 	var data github.PullRequestEvent

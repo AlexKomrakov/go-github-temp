@@ -77,7 +77,6 @@ func getKeyFile() (key ssh.Signer, err error) {
 	return
 }
 
-//TODO Defer close
 func getSshClient(user_host string) (client *ssh.Client, err error) {
 	key, err := getKeyFile()
 	if err != nil {

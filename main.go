@@ -187,21 +187,21 @@ func execSshCommand(host string, command string) (out string, err error) {
 func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	body := req.FormValue("payload")
 
-	fmt.Println(req.Header["X-Github-Event"])
-	fmt.Println(req.Header["X-Github-Event"][0])
-	fmt.Println(body)
-
-	var data github.PullRequestEvent
-	json.Unmarshal([]byte(body), &data)
-
-	owner_name := *data.Repo.Owner.Login
-	repo_name := *data.Repo.Name
-	sha := *data.PullRequest.Head.SHA
-
-	branch := mongo.Branch{owner_name, repo_name, sha}
-	build := &mongo.Build{branch, data, nil, bson.NewObjectId()}
-
-	runCommands(build)
+	switch req.Header["X-Github-Event"][0] {
+	case "pull_request":
+		var data github.PullRequestEvent
+		json.Unmarshal([]byte(body), &data)
+		if data.Action == "opened" || "reopened" || "synchronize" {
+			branch := mongo.Branch{*data.Repo.Owner.Login, *data.Repo.Name, *data.PullRequest.Head.SHA}
+			build := &mongo.Build{branch, data, nil, bson.NewObjectId()}
+			runCommands(build)
+		}
+	case "push":
+		fmt.Println("Recieved push event")
+	default:
+		fmt.Println("Not supported event: " + req.Header["X-Github-Event"][0])
+		fmt.Println(body)
+	}
 }
 
 func GetReposApi(r render.Render) {

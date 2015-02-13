@@ -197,7 +197,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 			build := &mongo.Build{branch, pullRequestEvent, nil, bson.NewObjectId()}
 			runCommands(build)
 		} else {
-			fmt.Print("Skipping pull request event type: " + *data.Action)
+			fmt.Print("Skipping pull request event type: " + *pullRequestEvent.Action)
 		}
 	case "push":
 		var pushEvent github.PushEvent

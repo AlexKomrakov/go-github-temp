@@ -201,9 +201,9 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	case "push":
 		var pushEvent github.PushEvent
 		json.Unmarshal([]byte(body), &pushEvent)
-		fmt.Println(pushEvent.Head)
 		fmt.Println(*pushEvent.Ref)
 		fmt.Println("Recieved push event")
+		fmt.Println(body)
 	default:
 		fmt.Println("Not supported event: " + req.Header["X-Github-Event"][0])
 		fmt.Println(body)

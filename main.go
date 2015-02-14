@@ -26,8 +26,9 @@ const (
 var config ServerConfig
 
 type ymlConfig struct {
-	Host     string
-	Commands []map[string]string
+	Host         string
+	Pull_request []map[string]string
+	Push         []map[string]string
 }
 
 func getGithubFileContent(client *github.Client, br mongo.Branch, filename string) ([]byte, error) {
@@ -105,24 +106,19 @@ func getSshClient(user_host string) (client *ssh.Client, err error) {
 	return client, err
 }
 
-func runCommands(build *mongo.Build) {
+func runCommands(build *mongo.Build, client *github.Client, event string, config ymlConfig) {
 	var commands []mongo.Command
 	var out string
 	var err error
+	var actions []map[string]string
 
-	client := build.Branch.GetRepository().GetGithubClient()
+	if event == "push" {
+		actions = config.Push
+	} else if event == "pull_request" {
+		actions = config.Pull_request
+	}
 
-	content, _ := getGithubFileContent(client, build.Branch, deploy_file)
-	content = []byte(strings.Replace(string(content), "{{sha}}", build.Branch.Sha, -1))
-	config, _ := readYamlConfig(content)
-
-	for _, command := range config.Commands {
-		out, err = setGitStatus(client, build, "pending")
-		if err != nil {
-			commands = append(commands, mongo.Command{"status", "pending", out, err.Error()})
-		} else {
-			commands = append(commands, mongo.Command{Type: "status", Action: "pending", Out: out})
-		}
+	for _, command := range actions {
 		for commandType, action := range command {
 			actionStr := action
 			if commandType == "status" {
@@ -144,13 +140,6 @@ func runCommands(build *mongo.Build) {
 				commands = append(commands, mongo.Command{"status", "error", out, err.Error()})
 			} else {
 				commands = append(commands, mongo.Command{Type: "status", Action: "error", Out: out})
-			}
-		} else {
-			out, err = setGitStatus(client, build, "success")
-			if err != nil {
-				commands = append(commands, mongo.Command{"status", "success", out, err.Error()})
-			} else {
-				commands = append(commands, mongo.Command{Type: "status", Action: "success", Out: out})
 			}
 		}
 	}
@@ -183,10 +172,36 @@ func execSshCommand(host string, command string) (out string, err error) {
 	return outBuf.String(), errors.New(errBuf.String())
 }
 
+type PushEvent struct {
+	HeadCommit *PushEventCommit   `json:"head_commit,omitempty"`
+	Forced     *bool              `json:"forced,omitempty"`
+	Created    *bool              `json:"created,omitempty"`
+	Deleted    *bool              `json:"deleted,omitempty"`
+	Ref        *string            `json:"ref,omitempty"`
+	Before     *string            `json:"before,omitempty"`
+	After      *string            `json:"after,omitempty"`
+	Compare    *string            `json:"compare,omitempty"`
+	Size       *int               `json:"size,omitempty"`
+	Commits    []PushEventCommit  `json:"commits,omitempty"`
+	Repo       *github.Repository `json:"repository,omitempty"`
+}
+
+// PushEventCommit represents a git commit in a GitHub PushEvent.
+type PushEventCommit struct {
+	ID       *string              `json:"id,omitempty"`
+	Message  *string              `json:"message,omitempty"`
+	Author   *github.CommitAuthor `json:"author,omitempty"`
+	URL      *string              `json:"url,omitempty"`
+	Distinct *bool                `json:"distinct,omitempty"`
+	Added    []string             `json:"added,omitempty"`
+	Removed  []string             `json:"removed,omitempty"`
+	Modified []string             `json:"modified,omitempty"`
+}
+
 func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	body := req.FormValue("payload")
-
-	switch req.Header["X-Github-Event"][0] {
+	event := req.Header["X-Github-Event"][0]
+	switch event {
 	case "pull_request":
 		var pullRequestEvent github.PullRequestEvent
 		json.Unmarshal([]byte(body), &pullRequestEvent)
@@ -194,14 +209,19 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 		if actions[*pullRequestEvent.Action] {
 			branch := mongo.Branch{*pullRequestEvent.Repo.Owner.Login, *pullRequestEvent.Repo.Name, *pullRequestEvent.PullRequest.Head.SHA}
 			build := &mongo.Build{branch, pullRequestEvent, nil, bson.NewObjectId()}
-			runCommands(build)
+			client := build.Branch.GetRepository().GetGithubClient()
+			content, _ := getGithubFileContent(client, build.Branch, deploy_file)
+			content = []byte(strings.Replace(string(content), "{{sha}}", build.Branch.Sha, -1))
+			config, _ := readYamlConfig(content)
+
+			runCommands(build, client, event, config)
 		} else {
 			fmt.Print("Skipping pull request event type: " + *pullRequestEvent.Action)
 		}
 	case "push":
-		var pushEvent github.PushEvent
+		var pushEvent PushEvent
 		json.Unmarshal([]byte(body), &pushEvent)
-		fmt.Println(*pushEvent.Ref)
+		fmt.Println(pushEvent)
 		fmt.Println("Recieved push event")
 		fmt.Println(body)
 	default:

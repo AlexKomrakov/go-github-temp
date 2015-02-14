@@ -1,6 +1,11 @@
 host: komrakov@komrakov-stage.smart-crowd.ru
-commands:
+pull_request:
+  - status: pending
   - ssh: whereis git
   - ssh: cd /
   - ssh: ls
   - ssh: wheris {{sha}}
+  - status: success
+push:
+  - ssh: whereis git
+  - status: success

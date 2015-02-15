@@ -25,7 +25,13 @@
                     {{ range $index, $build := .builds }}
                     <tr {{if $.params.build}}{{if eq $.params.build $build.GetId}} class="uk-text-bold"{{end}}{{end}}>
                         <td>{{$index}}</td>
-                        <td>{{if $build.Success}}Success{{else}}Fail{{end}}</td>
+                        <td>
+                            {{if $build.Success}}
+                            <span class="uk-text-success">Success</span>
+                            {{else}}
+                            <span class="uk-text-danger">Fail</span>
+                            {{end}}
+                        </td>
                         <td>
                             <a target="_blank" href="https://github.com/{{ $build.Branch.Owner }}/{{ $build.Branch.Repo }}/commit/{{ $build.Branch.Sha }}">
                                 <i class="uk-icon-github"></i>

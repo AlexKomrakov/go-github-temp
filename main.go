@@ -287,7 +287,7 @@ func BuildPage(params martini.Params, r render.Render) {
 	data["params"] = params
 	data["builds"] = mongo.GetBuilds(params["user"], params["repo"])
 	data["build"] = mongo.GetBuild(params["build"])
-	r.HTML(200, "repo", data)
+	r.HTML(200, "repo", data) 
 }
 
 func Index(r render.Render) {

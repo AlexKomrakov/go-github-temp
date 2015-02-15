@@ -32,6 +32,7 @@ type Build struct {
 	Event    interface{}   `json:"event,omitempty"`
 	Commands []Command     `json:"commands,omitempty"`
 	Id       bson.ObjectId `json:"id,omitempty" bson:"_id,omitempty"`
+	Success  bool          `json:"success,omitempty"`
 }
 
 func (b *Build) GetId() string {

@@ -10,5 +10,5 @@ pull_request:
 push:
   branch: refs/heads/master
   commands:
-    - ssh: whereis git
+    - exec: whereis git
     - status: success

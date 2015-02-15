@@ -14,6 +14,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
+	"os/exec"
 	"os/user"
 	"strings"
 )
@@ -126,6 +127,9 @@ func runCommands(build *mongo.Build, client *github.Client, event string, config
 			if commandType == "status" {
 				out, err = setGitStatus(client, build, actionStr)
 			}
+			if commandType == "exec" {
+				out, err = execCommand(actionStr)
+			}
 			if commandType == "ssh" {
 				out, err = execSshCommand(config.Host, actionStr)
 			}
@@ -172,6 +176,16 @@ func execSshCommand(host string, command string) (out string, err error) {
 	}
 
 	return outBuf.String(), errors.New(errBuf.String())
+}
+
+func execCommand(cmd string) (string, error) {
+	parts := strings.Fields(cmd)
+	head := parts[0]
+	parts = parts[1:len(parts)]
+
+	out, err := exec.Command(head, parts...).Output()
+
+	return string(out), err
 }
 
 type PushEvent struct {
@@ -236,7 +250,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	default:
 		fmt.Println("Not supported event: " + req.Header["X-Github-Event"][0])
 		fmt.Println(body)
-	} 
+	}
 }
 
 func GetReposApi(r render.Render) {

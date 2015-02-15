@@ -223,13 +223,13 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	case "push":
 		var pushEvent PushEvent
 		json.Unmarshal([]byte(body), &pushEvent)
-		fmt.Println(pushEvent)
 		branch := mongo.Branch{*pushEvent.Repo.Owner.Name, *pushEvent.Repo.Name, *pushEvent.After}
 		build := &mongo.Build{branch, pushEvent, nil, bson.NewObjectId()}
 		client := build.Branch.GetRepository().GetGithubClient()
 		content, _ := getGithubFileContent(client, build.Branch, deploy_file)
 		content = []byte(strings.Replace(string(content), "{{sha}}", build.Branch.Sha, -1))
 		config, _ := readYamlConfig(content)
+
 		if config.Push.Branch == *pushEvent.Ref {
 			runCommands(build, client, event, config)
 		}

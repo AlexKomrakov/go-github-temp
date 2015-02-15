@@ -209,7 +209,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 		json.Unmarshal([]byte(body), &pullRequestEvent)
 		actions := map[string]bool{"opened": true, "reopened": true, "synchronize": true}
 		if actions[*pullRequestEvent.Action] {
-			branch := mongo.Branch{*pullRequestEvent.Repo.Owner.Name, *pullRequestEvent.Repo.Name, *pullRequestEvent.PullRequest.Head.SHA}
+			branch := mongo.Branch{*pullRequestEvent.Repo.Owner.Login, *pullRequestEvent.Repo.Name, *pullRequestEvent.PullRequest.Head.SHA}
 			build := &mongo.Build{branch, pullRequestEvent, nil, bson.NewObjectId()}
 			client := build.Branch.GetRepository().GetGithubClient()
 			content, _ := getGithubFileContent(client, build.Branch, deploy_file)
@@ -230,8 +230,9 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 		content, _ := getGithubFileContent(client, build.Branch, deploy_file)
 		content = []byte(strings.Replace(string(content), "{{sha}}", build.Branch.Sha, -1))
 		config, _ := readYamlConfig(content)
-
-		runCommands(build, client, event, config)
+		if config.Push.Branch == *pushEvent.Ref {
+			runCommands(build, client, event, config)
+		}
 	default:
 		fmt.Println("Not supported event: " + req.Header["X-Github-Event"][0])
 		fmt.Println(body)

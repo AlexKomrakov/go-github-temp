@@ -233,7 +233,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 		runCommands(build, client, event, config)
 	default:
 		fmt.Println("Not supported event: " + req.Header["X-Github-Event"][0])
-		fmt.Println(body) 
+		fmt.Println(body)
 	}
 }
 

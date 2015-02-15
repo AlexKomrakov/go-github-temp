@@ -153,6 +153,7 @@ func runCommands(build *mongo.Build, client *github.Client, event string, config
 		actions = config.Pull_request.Commands
 	}
 
+	build.Success = true
 	for _, command := range actions {
 		for commandType, actionStr := range command {
 			if commandType == "status" {
@@ -174,6 +175,7 @@ func runCommands(build *mongo.Build, client *github.Client, event string, config
 			out, err = setGitStatus(client, build, "error")
 			if err != nil {
 				commands = append(commands, mongo.Command{"status", "error", out, err.Error()})
+				build.Success = false
 			} else {
 				commands = append(commands, mongo.Command{Type: "status", Action: "error", Out: out})
 			}

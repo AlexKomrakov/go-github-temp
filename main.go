@@ -188,7 +188,7 @@ func execCommand(cmd string) (string, error) {
 	return string(out), err
 }
 
-type PushEvent struct {
+type PushEvent struct { 
 	HeadCommit *PushEventCommit   `json:"head_commit,omitempty"`
 	Forced     *bool              `json:"forced,omitempty"`
 	Created    *bool              `json:"created,omitempty"`

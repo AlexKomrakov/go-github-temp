@@ -269,7 +269,7 @@ func PostReposApi(res http.ResponseWriter, req *http.Request, r render.Render) {
 	err := decoder.Decode(&repo)
 	if err != nil {
 		panic(err)
-	}
+	} 
 	//	mongo.AddRepository(&repo) Temporary disable adding repos
 	r.JSON(200, map[string]string{"status": "ok"})
 }

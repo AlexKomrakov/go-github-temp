@@ -142,7 +142,7 @@ func getSshClient(user_host string) (client *ssh.Client, err error) {
 }
 
 func runCommands(build *mongo.Build, client *github.Client, event string, config ymlConfig) {
-	defer build.Save()
+	defer build.Save() 
 
 	var commands []mongo.Command
 	var out string

@@ -168,7 +168,7 @@ func runCommands(build *mongo.Build, client *github.Client, event string, config
 				commands = append(commands, mongo.Command{commandType, actionStr, out, err.Error()})
 			} else {
 				commands = append(commands, mongo.Command{Type: commandType, Action: actionStr, Out: out})
-			}
+			} 
 		}
 		if err != nil {
 			out, err = setGitStatus(client, build, "error")

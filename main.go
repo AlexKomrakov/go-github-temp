@@ -251,7 +251,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 		config, _ := readYamlConfig(content)
 
 		if config.Push.Branch == *pushEvent.Ref {
-			go runCommands(build, client, event, config)
+			go runCommands(build, client, event, config) 
 		}
 	default:
 		fmt.Println("Not supported event: " + req.Header["X-Github-Event"][0])

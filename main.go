@@ -26,6 +26,11 @@ const (
 
 var config ServerConfig
 
+type ServerConfig struct {
+	Server string
+	Adress string
+}
+
 type ymlConfig struct {
 	Host         string
 	Pull_request struct{ Commands []map[string]string }
@@ -33,6 +38,32 @@ type ymlConfig struct {
 		Branch   string
 		Commands []map[string]string
 	}
+}
+
+type PushEvent struct {
+	HeadCommit *PushEventCommit   `json:"head_commit,omitempty"`
+	Forced     *bool              `json:"forced,omitempty"`
+	Created    *bool              `json:"created,omitempty"`
+	Deleted    *bool              `json:"deleted,omitempty"`
+	Ref        *string            `json:"ref,omitempty"`
+	Before     *string            `json:"before,omitempty"`
+	After      *string            `json:"after,omitempty"`
+	Compare    *string            `json:"compare,omitempty"`
+	Size       *int               `json:"size,omitempty"`
+	Commits    []PushEventCommit  `json:"commits,omitempty"`
+	Repo       *github.Repository `json:"repository,omitempty"`
+}
+
+// PushEventCommit represents a git commit in a GitHub PushEvent.
+type PushEventCommit struct {
+	ID       *string              `json:"id,omitempty"`
+	Message  *string              `json:"message,omitempty"`
+	Author   *github.CommitAuthor `json:"author,omitempty"`
+	URL      *string              `json:"url,omitempty"`
+	Distinct *bool                `json:"distinct,omitempty"`
+	Added    []string             `json:"added,omitempty"`
+	Removed  []string             `json:"removed,omitempty"`
+	Modified []string             `json:"modified,omitempty"`
 }
 
 func getGithubFileContent(client *github.Client, br mongo.Branch, filename string) ([]byte, error) {
@@ -188,32 +219,6 @@ func execCommand(cmd string) (string, error) {
 	return string(out), err
 }
 
-type PushEvent struct { 
-	HeadCommit *PushEventCommit   `json:"head_commit,omitempty"`
-	Forced     *bool              `json:"forced,omitempty"`
-	Created    *bool              `json:"created,omitempty"`
-	Deleted    *bool              `json:"deleted,omitempty"`
-	Ref        *string            `json:"ref,omitempty"`
-	Before     *string            `json:"before,omitempty"`
-	After      *string            `json:"after,omitempty"`
-	Compare    *string            `json:"compare,omitempty"`
-	Size       *int               `json:"size,omitempty"`
-	Commits    []PushEventCommit  `json:"commits,omitempty"`
-	Repo       *github.Repository `json:"repository,omitempty"`
-}
-
-// PushEventCommit represents a git commit in a GitHub PushEvent.
-type PushEventCommit struct {
-	ID       *string              `json:"id,omitempty"`
-	Message  *string              `json:"message,omitempty"`
-	Author   *github.CommitAuthor `json:"author,omitempty"`
-	URL      *string              `json:"url,omitempty"`
-	Distinct *bool                `json:"distinct,omitempty"`
-	Added    []string             `json:"added,omitempty"`
-	Removed  []string             `json:"removed,omitempty"`
-	Modified []string             `json:"modified,omitempty"`
-}
-
 func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	body := req.FormValue("payload")
 	event := req.Header["X-Github-Event"][0]
@@ -286,11 +291,6 @@ func BuildPage(params martini.Params, r render.Render) {
 
 func Index(r render.Render) {
 	r.HTML(200, "index", nil)
-}
-
-type ServerConfig struct {
-	Server string
-	Adress string
 }
 
 func readConfig() ServerConfig {

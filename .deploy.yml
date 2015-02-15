@@ -10,5 +10,6 @@ pull_request:
 push:
   branch: refs/heads/master
   commands:
-    - exec: whereis git
+    - exec: pkill -f main
+    - exec: go run ~/go/src/github.com/alexkomrakov/gohub/main.go
     - status: success

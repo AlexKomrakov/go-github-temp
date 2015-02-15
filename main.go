@@ -223,6 +223,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	case "push":
 		var pushEvent PushEvent
 		json.Unmarshal([]byte(body), &pushEvent)
+		fmt.Println(pushEvent)
 		branch := mongo.Branch{*pushEvent.Repo.Owner.Login, *pushEvent.Repo.Name, *pushEvent.After}
 		build := &mongo.Build{branch, pushEvent, nil, bson.NewObjectId()}
 		client := build.Branch.GetRepository().GetGithubClient()

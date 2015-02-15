@@ -219,7 +219,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 			runCommands(build, client, event, config)
 		} else {
 			fmt.Print("Skipping pull request event type: " + *pullRequestEvent.Action)
-		} 
+		}
 	case "push":
 		var pushEvent PushEvent
 		json.Unmarshal([]byte(body), &pushEvent)

@@ -236,7 +236,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	default:
 		fmt.Println("Not supported event: " + req.Header["X-Github-Event"][0])
 		fmt.Println(body)
-	}
+	} 
 }
 
 func GetReposApi(r render.Render) {

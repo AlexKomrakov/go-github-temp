@@ -153,7 +153,6 @@ func runCommands(build *mongo.Build, client *github.Client, event string, config
 		actions = config.Pull_request.Commands
 	}
 
-	build.Success = true
 	for _, command := range actions {
 		for commandType, actionStr := range command {
 			if commandType == "status" {
@@ -231,7 +230,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 		actions := map[string]bool{"opened": true, "reopened": true, "synchronize": true}
 		if actions[*pullRequestEvent.Action] {
 			branch := mongo.Branch{*pullRequestEvent.Repo.Owner.Login, *pullRequestEvent.Repo.Name, *pullRequestEvent.PullRequest.Head.SHA}
-			build := &mongo.Build{branch, pullRequestEvent, nil, bson.NewObjectId()}
+			build := &mongo.Build{branch, pullRequestEvent, nil, bson.NewObjectId(), true}
 			client := build.Branch.GetRepository().GetGithubClient()
 			content, _ := getGithubFileContent(client, build.Branch, deploy_file)
 			content = []byte(strings.Replace(string(content), "{{sha}}", build.Branch.Sha, -1))
@@ -245,7 +244,7 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 		var pushEvent PushEvent
 		json.Unmarshal([]byte(body), &pushEvent)
 		branch := mongo.Branch{*pushEvent.Repo.Owner.Name, *pushEvent.Repo.Name, *pushEvent.After}
-		build := &mongo.Build{branch, pushEvent, nil, bson.NewObjectId()}
+		build := &mongo.Build{branch, pushEvent, nil, bson.NewObjectId(), true}
 		client := build.Branch.GetRepository().GetGithubClient()
 		content, _ := getGithubFileContent(client, build.Branch, deploy_file)
 		content = []byte(strings.Replace(string(content), "{{sha}}", build.Branch.Sha, -1))

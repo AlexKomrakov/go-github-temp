@@ -27,8 +27,11 @@ var config ServerConfig
 
 type ymlConfig struct {
 	Host         string
-	Pull_request []map[string]string
-	Push         []map[string]string
+	Pull_request struct{ Commands []map[string]string }
+	Push         struct {
+		Branch   string
+		Commands []map[string]string
+	}
 }
 
 func getGithubFileContent(client *github.Client, br mongo.Branch, filename string) ([]byte, error) {
@@ -113,14 +116,13 @@ func runCommands(build *mongo.Build, client *github.Client, event string, config
 	var actions []map[string]string
 
 	if event == "push" {
-		actions = config.Push
+		actions = config.Push.Commands
 	} else if event == "pull_request" {
-		actions = config.Pull_request
+		actions = config.Pull_request.Commands
 	}
 
 	for _, command := range actions {
-		for commandType, action := range command {
-			actionStr := action
+		for commandType, actionStr := range command {
 			if commandType == "status" {
 				out, err = setGitStatus(client, build, actionStr)
 			}
@@ -129,7 +131,6 @@ func runCommands(build *mongo.Build, client *github.Client, event string, config
 			}
 			if err != nil {
 				commands = append(commands, mongo.Command{commandType, actionStr, out, err.Error()})
-				break
 			} else {
 				commands = append(commands, mongo.Command{Type: commandType, Action: actionStr, Out: out})
 			}
@@ -141,6 +142,7 @@ func runCommands(build *mongo.Build, client *github.Client, event string, config
 			} else {
 				commands = append(commands, mongo.Command{Type: "status", Action: "error", Out: out})
 			}
+			break
 		}
 	}
 	build.Commands = commands
@@ -221,9 +223,14 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	case "push":
 		var pushEvent PushEvent
 		json.Unmarshal([]byte(body), &pushEvent)
-		fmt.Println(pushEvent)
-		fmt.Println("Recieved push event")
-		fmt.Println(body)
+		branch := mongo.Branch{*pushEvent.Repo.Owner.Login, *pushEvent.Repo.Name, *pushEvent.After}
+		build := &mongo.Build{branch, pushEvent, nil, bson.NewObjectId()}
+		client := build.Branch.GetRepository().GetGithubClient()
+		content, _ := getGithubFileContent(client, build.Branch, deploy_file)
+		content = []byte(strings.Replace(string(content), "{{sha}}", build.Branch.Sha, -1))
+		config, _ := readYamlConfig(content)
+
+		runCommands(build, client, event, config)
 	default:
 		fmt.Println("Not supported event: " + req.Header["X-Github-Event"][0])
 		fmt.Println(body)

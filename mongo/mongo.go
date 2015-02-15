@@ -1,10 +1,10 @@
 package mongo
 
 import (
+	"code.google.com/p/goauth2/oauth"
+	"github.com/google/go-github/github"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/google/go-github/github"
-	"code.google.com/p/goauth2/oauth"
 )
 
 const (
@@ -28,10 +28,10 @@ func (r *Repository) GetGithubClient() *github.Client {
 }
 
 type Build struct {
-	Branch   Branch                  `json:"branch,omitempty"`
-	Event    github.PullRequestEvent `json:"event,omitempty"`
-	Commands []Command 			     `json:"commands,omitempty"`
-	Id       bson.ObjectId           `json:"id,omitempty" bson:"_id,omitempty"`
+	Branch   Branch        `json:"branch,omitempty"`
+	Event    interface{}   `json:"event,omitempty"`
+	Commands []Command     `json:"commands,omitempty"`
+	Id       bson.ObjectId `json:"id,omitempty" bson:"_id,omitempty"`
 }
 
 func (b *Build) GetId() string {
@@ -84,7 +84,7 @@ func (b *Branch) GetRepository() (r *Repository) {
 }
 
 //TODO defer session.Close()
-func getDb() (*mgo.Database) {
+func getDb() *mgo.Database {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		panic(err)

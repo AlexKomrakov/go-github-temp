@@ -182,7 +182,7 @@ func runCommands(build *mongo.Build, client *github.Client, event string, config
 		}
 	}
 	build.Commands = commands
-	build.Save()
+	build.Save() 
 }
 
 func execSshCommand(host string, command string) (out string, err error) {

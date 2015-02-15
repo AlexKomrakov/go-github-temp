@@ -142,6 +142,8 @@ func getSshClient(user_host string) (client *ssh.Client, err error) {
 }
 
 func runCommands(build *mongo.Build, client *github.Client, event string, config ymlConfig) {
+	defer build.Save()
+
 	var commands []mongo.Command
 	var out string
 	var err error
@@ -168,7 +170,7 @@ func runCommands(build *mongo.Build, client *github.Client, event string, config
 				commands = append(commands, mongo.Command{commandType, actionStr, out, err.Error()})
 			} else {
 				commands = append(commands, mongo.Command{Type: commandType, Action: actionStr, Out: out})
-			} 
+			}
 		}
 		if err != nil {
 			out, err = setGitStatus(client, build, "error")
@@ -181,8 +183,6 @@ func runCommands(build *mongo.Build, client *github.Client, event string, config
 			break
 		}
 	}
-	build.Commands = commands
-	build.Save()
 }
 
 func execSshCommand(host string, command string) (out string, err error) {

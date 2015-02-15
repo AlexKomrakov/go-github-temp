@@ -10,5 +10,4 @@ pull_request:
 push:
   branch: refs/heads/master
   commands:
-    - exec: go get -u github.com/alexkomrakov/gohub & || : 
-    - status: success
+    - exec: go get -u github.com/alexkomrakov/gohub

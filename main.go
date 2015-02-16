@@ -28,7 +28,7 @@ const (
 	config_file = ".config.yml"
 )
 
-var config    ServerConfig
+var config ServerConfig
 var waitGroup *sync.WaitGroup
 
 type ServerConfig struct {
@@ -331,6 +331,7 @@ func InterruptInterceptor() {
 
 func main() {
 	InterruptInterceptor()
+	
 	config = readConfig()
 	m := martini.Classic()
 	m.Use(render.Renderer(render.Options{Layout: "base"}))

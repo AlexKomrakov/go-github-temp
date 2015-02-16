@@ -319,5 +319,5 @@ func main() {
 	m.Post("/hooks", GithubHookApi)
 	m.Get("/repos/:user/:repo", RepoPage)
 	m.Get("/repos/:user/:repo/:build", BuildPage)
-	m.RunOnAddr(config.Server)
+	m.Run()
 }

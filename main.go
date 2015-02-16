@@ -330,7 +330,7 @@ func InterruptInterceptor() {
 
 func main() {
 	InterruptInterceptor()
-	
+
 	config = readConfig()
 	m := martini.Classic()
 	m.Use(render.Renderer(render.Options{Layout: "base"}))

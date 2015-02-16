@@ -313,7 +313,7 @@ func readConfig() ServerConfig {
 	if err2 != nil {
 		fmt.Println("Error on reading yaml config")
 	}
-
+ 
 	return config
 }
 

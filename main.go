@@ -14,9 +14,14 @@ import (
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
+	"os/signal"
 	"os/user"
 	"strings"
+	"sync"
+	"syscall"
+	"time"
 )
 
 const (
@@ -25,6 +30,7 @@ const (
 )
 
 var config ServerConfig
+var waitGroup *sync.WaitGroup
 
 type ServerConfig struct {
 	Server string
@@ -221,6 +227,9 @@ func execCommand(cmd string) (string, error) {
 }
 
 func GithubHookApi(w http.ResponseWriter, req *http.Request) {
+	defer waitGroup.Done()
+	waitGroup.Add(1)
+
 	body := req.FormValue("payload")
 	event := req.Header["X-Github-Event"][0]
 	switch event {
@@ -309,7 +318,20 @@ func readConfig() ServerConfig {
 	return config
 }
 
+func InterruptInterceptor() {
+	ch := make(chan os.Signal)
+	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
+	waitGroup = &sync.WaitGroup{}
+
+	go func() {
+		<-ch
+		waitGroup.Wait()
+		os.Exit(1)
+	}()
+}
+
 func main() {
+	InterruptInterceptor()
 	config = readConfig()
 	m := martini.Classic()
 	m.Use(render.Renderer(render.Options{Layout: "base"}))
@@ -319,5 +341,6 @@ func main() {
 	m.Post("/hooks", GithubHookApi)
 	m.Get("/repos/:user/:repo", RepoPage)
 	m.Get("/repos/:user/:repo/:build", BuildPage)
+
 	m.RunOnAddr(config.Server)
 }

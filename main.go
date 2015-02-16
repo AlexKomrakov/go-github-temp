@@ -321,7 +321,6 @@ func InterruptInterceptor() {
 	ch := make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 	waitGroup = &sync.WaitGroup{}
-
 	go func() {
 		<-ch
 		waitGroup.Wait()

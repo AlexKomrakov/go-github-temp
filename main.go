@@ -28,7 +28,7 @@ const (
 	config_file = ".config.yml"
 )
 
-var config ServerConfig
+var config    ServerConfig
 var waitGroup *sync.WaitGroup
 
 type ServerConfig struct {

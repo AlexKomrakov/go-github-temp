@@ -320,7 +320,7 @@ func main() {
 	r = render.New(render.Options{Layout: "base"})
 
 	router := mux.NewRouter()
-	router.HandleFunc("/a", Index).Methods("GET")
+	router.HandleFunc("/", Index).Methods("GET")
 	router.HandleFunc("/repos", GetReposApi).Methods("GET")
 	router.HandleFunc("/repos/{user}/{repo}", RepoPage).Methods("GET")
 	router.HandleFunc("/repos/{user}/{repo}/{build}", BuildPage).Methods("GET")
@@ -330,5 +330,5 @@ func main() {
 	n := negroni.Classic()
 	n.UseHandler(router)
 
-	graceful.Run(config.Adress, 10*time.Second, n)
+	graceful.Run(config.Adress, 30*time.Second, n)
 }

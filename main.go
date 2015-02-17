@@ -316,7 +316,6 @@ func readConfig() ServerConfig {
 }
 
 func main() {
-
 	config = readConfig()
 	r = render.New(render.Options{Layout: "base"})
 

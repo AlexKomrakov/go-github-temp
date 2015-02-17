@@ -225,7 +225,7 @@ func execCommand(cmd string) (string, error) {
 }
 
 func GithubHookApi(w http.ResponseWriter, req *http.Request) {
-	body := req.FormValue("payload")
+	body  := req.FormValue("payload")
 	event := req.Header["X-Github-Event"][0]
 	switch event {
 	case "pull_request":

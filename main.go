@@ -6,21 +6,20 @@ import (
 	"errors"
 	"fmt"
 	"github.com/alexkomrakov/gohub/mongo"
-	"github.com/go-martini/martini"
+	"github.com/codegangsta/negroni"
 	"github.com/google/go-github/github"
-	"github.com/martini-contrib/render"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/graceful"
+	"github.com/unrolled/render"
 	"golang.org/x/crypto/ssh"
 	"gopkg.in/mgo.v2/bson"
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"os/exec"
-	"os/signal"
 	"os/user"
 	"strings"
-	"sync"
-	"syscall"
+	"time"
 )
 
 const (
@@ -29,10 +28,10 @@ const (
 )
 
 var config ServerConfig
-var waitGroup *sync.WaitGroup
+var r *render.Render
 
 type ServerConfig struct {
-	Server string
+	Url    string
 	Adress string
 }
 
@@ -89,7 +88,7 @@ func getGithubFileContent(client *github.Client, br mongo.Branch, filename strin
 // Statuses: pending, success, error, or failure
 func setGitStatus(client *github.Client, build *mongo.Build, state string) (out string, err error) {
 	context := "continuous-integration/gorgon-ci"
-	url := config.Adress + "/repos/" + build.Branch.Owner + "/" + build.Branch.Repo + "/" + build.Id.Hex()
+	url := config.Url + "/repos/" + build.Branch.Owner + "/" + build.Branch.Repo + "/" + build.Id.Hex()
 	status := &github.RepoStatus{State: &state, Context: &context, TargetURL: &url}
 	repoStatus, _, err := client.Repositories.CreateStatus(build.Branch.Owner, build.Branch.Repo, build.Branch.Sha, status)
 	out = "Success. Current github branch status: " + *repoStatus.State
@@ -226,9 +225,6 @@ func execCommand(cmd string) (string, error) {
 }
 
 func GithubHookApi(w http.ResponseWriter, req *http.Request) {
-	defer waitGroup.Done()
-	waitGroup.Add(1)
-
 	body := req.FormValue("payload")
 	event := req.Header["X-Github-Event"][0]
 	switch event {
@@ -267,39 +263,41 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func GetReposApi(r render.Render) {
+func GetReposApi(res http.ResponseWriter, req *http.Request) {
 	repositories := mongo.GetRepositories()
-	r.JSON(200, repositories)
+	r.JSON(res, http.StatusOK, repositories)
 }
 
-func PostReposApi(res http.ResponseWriter, req *http.Request, r render.Render) {
+func PostReposApi(res http.ResponseWriter, req *http.Request) {
 	decoder := json.NewDecoder(req.Body)
 	var repo mongo.Repository
 	err := decoder.Decode(&repo)
 	if err != nil {
 		panic(err)
 	}
-	//	mongo.AddRepository(&repo) Temporary disable adding repos
-	r.JSON(200, map[string]string{"status": "ok"})
+	// mongo.AddRepository(&repo) // Temporary disable
+	r.JSON(res, http.StatusOK, map[string]string{"status": "ok"})
 }
 
-func RepoPage(params martini.Params, r render.Render) {
+func RepoPage(res http.ResponseWriter, req *http.Request) {
+	params := mux.Vars(req)
 	data := make(map[string]interface{})
 	data["params"] = params
 	data["builds"] = mongo.GetBuilds(params["user"], params["repo"])
-	r.HTML(200, "repo", data)
+	r.HTML(res, http.StatusOK, "repo", data)
 }
 
-func BuildPage(params martini.Params, r render.Render) {
+func BuildPage(res http.ResponseWriter, req *http.Request) {
+	params := mux.Vars(req)
 	data := make(map[string]interface{})
 	data["params"] = params
 	data["builds"] = mongo.GetBuilds(params["user"], params["repo"])
 	data["build"] = mongo.GetBuild(params["build"])
-	r.HTML(200, "repo", data)
+	r.HTML(res, http.StatusOK, "repo", data)
 }
 
-func Index(r render.Render) {
-	r.HTML(200, "index", nil)
+func Index(res http.ResponseWriter, req *http.Request) {
+	r.HTML(res, http.StatusOK, "index", nil)
 }
 
 func readConfig() ServerConfig {
@@ -313,33 +311,25 @@ func readConfig() ServerConfig {
 	if err2 != nil {
 		fmt.Println("Error on reading yaml config")
 	}
- 
+
 	return config
 }
 
-func InterruptInterceptor() {
-	ch := make(chan os.Signal)
-	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
-	waitGroup = &sync.WaitGroup{}
-	go func() {
-		<-ch
-		waitGroup.Wait()
-		os.Exit(1)
-	}()
-}
-
 func main() {
-	InterruptInterceptor()
 
 	config = readConfig()
-	m := martini.Classic()
-	m.Use(render.Renderer(render.Options{Layout: "base"}))
-	m.Get("/", Index)
-	m.Get("/repos", GetReposApi)
-	m.Post("/repos", PostReposApi)
-	m.Post("/hooks", GithubHookApi)
-	m.Get("/repos/:user/:repo", RepoPage)
-	m.Get("/repos/:user/:repo/:build", BuildPage)
+	r = render.New(render.Options{Layout: "base"})
 
-	m.RunOnAddr(config.Server)
+	router := mux.NewRouter()
+	router.HandleFunc("/", Index).Methods("GET")
+	router.HandleFunc("/repos", GetReposApi).Methods("GET")
+	router.HandleFunc("/repos/{user}/{repo}", RepoPage).Methods("GET")
+	router.HandleFunc("/repos/{user}/{repo}/{build}", BuildPage).Methods("GET")
+	router.HandleFunc("/repos", PostReposApi).Methods("POST")
+	router.HandleFunc("/hooks", GithubHookApi).Methods("POST")
+
+	n := negroni.Classic()
+	n.UseHandler(router)
+
+	graceful.Run(config.Adress, 10*time.Second, n)
 }

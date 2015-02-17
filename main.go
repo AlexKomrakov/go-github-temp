@@ -320,7 +320,7 @@ func main() {
 	r = render.New(render.Options{Layout: "base"})
 
 	router := mux.NewRouter()
-	router.HandleFunc("/", Index).Methods("GET")
+	router.HandleFunc("/a", Index).Methods("GET")
 	router.HandleFunc("/repos", GetReposApi).Methods("GET")
 	router.HandleFunc("/repos/{user}/{repo}", RepoPage).Methods("GET")
 	router.HandleFunc("/repos/{user}/{repo}/{build}", BuildPage).Methods("GET")

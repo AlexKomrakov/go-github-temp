@@ -1,11 +1,11 @@
-<div>
+<div ng-controller="repoController">
 
     <div class="section-medium bg-light">
         <div class="uk-container uk-container-center">
-
             <h2>{{ .params.user }} / {{ .params.repo }}</h2>
-            <!--<a href="#" class="uk-icon-button uk-icon-github"></a> Set github pull-request hook-->
-
+            <button class="uk-button" ng-class="{'uk-button-success': okHook.data.hook != null, 'uk-button-danger': okHook.data.error != null}" ng-click="setHook('{{ .params.user }}', '{{ .params.repo }}')">
+                <i class="uk-icon-github"></i> Set github hook
+            </button>
         </div>
     </div>
     <div class="section-medium">

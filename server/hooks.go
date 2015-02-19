@@ -16,6 +16,8 @@ import (
 	"strings"
 )
 
+const deploy_file = ".deploy.yml"
+
 func ProcessHook(event, body string) {
 	switch event {
 	case "pull_request":
@@ -185,4 +187,22 @@ func execCommand(cmd string) (string, error) {
 	out, err := exec.Command(head, parts...).Output()
 
 	return string(out), err
+}
+
+func setGithubHook(user, repo string) map[string]interface{} {
+	branch := mongo.Branch{user, repo, ""}
+	client := branch.GetRepository().GetGithubClient()
+
+	config, _ := GetServerConfig()
+	url  := config.Url + "/hooks"
+	hook := &github.Hook{Name: github.String("web"), Active: github.Bool(true), Events: []string{"pull_request", "push"}, Config: map[string]interface {}{"url": url, "content_type": "json"}}
+
+	hook, response, error := client.Repositories.CreateHook(user, repo, hook)
+
+	result := make(map[string]interface{})
+	result["hook"]     = hook
+	result["response"] = response
+	result["error"]    = error
+
+	return result
 }

@@ -10,8 +10,6 @@ import (
 	"net/http"
 )
 
-const deploy_file = ".deploy.yml"
-
 var r *render.Render
 
 func init() {
@@ -20,6 +18,12 @@ func init() {
 
 func Index(res http.ResponseWriter, req *http.Request) {
 	r.HTML(res, http.StatusOK, "index", nil)
+}
+
+func SetHook(res http.ResponseWriter, req *http.Request) {
+	params := mux.Vars(req)
+	result := setGithubHook(params["user"], params["repo"])
+	r.JSON(res, http.StatusOK, result)
 }
 
 func GetReposApi(res http.ResponseWriter, req *http.Request) {
@@ -58,5 +62,5 @@ func BuildPage(res http.ResponseWriter, req *http.Request) {
 	data["params"] = params
 	data["builds"] = mongo.GetBuilds(params["user"], params["repo"])
 	data["build"] = mongo.GetBuild(params["build"])
-	r.HTML(res, http.StatusOK, "repo", data)
+	r.HTML(res, http.StatusOK, "build", data)
 }

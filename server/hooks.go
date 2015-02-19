@@ -36,7 +36,10 @@ func ProcessHook(event, body string) {
 			fmt.Print("Skipping pull request event type: " + *pullRequestEvent.Action)
 		}
 	case "push":
-		pushEvent, _ := ParsePushEvent(body)
+		pushEvent, err := ParsePushEvent(body)
+		if err != nil {
+			panic(err)
+		}
 		branch := mongo.Branch{*pushEvent.Repo.Owner.Name, *pushEvent.Repo.Name, *pushEvent.After}
 		build := &mongo.Build{branch, pushEvent, nil, bson.NewObjectId(), true}
 		client := build.Branch.GetRepository().GetGithubClient()
@@ -186,7 +189,7 @@ func execCommand(cmd string) (string, error) {
 
 	out, err := exec.Command(head, parts...).Output()
 
-	return string(out), err 
+	return string(out), err
 }
 
 func setGithubHook(user, repo string) map[string]interface{} {

@@ -13,7 +13,7 @@ func main() {
 	config, _ := server.GetServerConfig()
 	router := server.Router()
 
-	n := negroni.Classic()
+	n := negroni.Classic() 
 	n.UseHandler(router)
 	graceful.Run(config.Adress, 30*time.Second, n)
 }

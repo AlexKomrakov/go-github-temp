@@ -61,6 +61,6 @@ func BuildPage(res http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	data["params"] = params
 	data["builds"] = mongo.GetBuilds(params["user"], params["repo"])
-	data["build"] = mongo.GetBuild(params["build"])
-	r.HTML(res, http.StatusOK, "build", data)
+	data["build"]  = mongo.GetBuild(params["build"])
+	r.HTML(res, http.StatusOK, "repo", data)
 }

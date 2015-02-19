@@ -186,7 +186,7 @@ func execCommand(cmd string) (string, error) {
 
 	out, err := exec.Command(head, parts...).Output()
 
-	return string(out), err
+	return string(out), err 
 }
 
 func setGithubHook(user, repo string) map[string]interface{} {

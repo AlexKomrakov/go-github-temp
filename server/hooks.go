@@ -198,7 +198,7 @@ func setGithubHook(user, repo string) map[string]interface{} {
 
 	config, _ := GetServerConfig()
 	url  := config.Url + "/hooks"
-	hook := &github.Hook{Name: github.String("web"), Active: github.Bool(true), Events: []string{"pull_request", "push"}, Config: map[string]interface {}{"url": url, "content_type": "json"}}
+	hook := &github.Hook{Name: github.String("web"), Active: github.Bool(true), Events: []string{"pull_request", "push"}, Config: map[string]interface {}{"url": url}}
 
 	hook, response, error := client.Repositories.CreateHook(user, repo, hook)
 

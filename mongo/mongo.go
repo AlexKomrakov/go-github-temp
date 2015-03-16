@@ -33,6 +33,7 @@ type Build struct {
 	Commands []Command     `json:"commands,omitempty"`
 	Id       bson.ObjectId `json:"id,omitempty" bson:"_id,omitempty"`
 	Success  bool          `json:"success,omitempty"`
+	Time     int64         `json:"time,omitempty"`
 }
 
 func (b *Build) GetId() string {

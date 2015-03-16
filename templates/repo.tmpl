@@ -19,6 +19,7 @@
                         <th>Status</th>
                         <th>Commit</th>
                         <th>Build Id</th>
+                        <th>Time</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -42,6 +43,9 @@
                             <a href="/repos/{{ $build.Branch.Owner }}/{{ $build.Branch.Repo }}/{{ $build.GetId }}">
                                 {{ $build.GetId }}
                             </a>
+                        </td>
+                        <td>
+                            {{ $build.Time }}
                         </td>
                     </tr>
                     {{ end }}

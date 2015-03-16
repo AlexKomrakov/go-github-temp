@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"os/user"
 	"strings"
+	"time"
 )
 
 const deploy_file = ".deploy.yml"
@@ -25,7 +26,7 @@ func ProcessHook(event, body string) {
 		actions := map[string]bool{"opened": true, "reopened": true, "synchronize": true}
 		if actions[*pullRequestEvent.Action] {
 			branch := mongo.Branch{*pullRequestEvent.Repo.Owner.Login, *pullRequestEvent.Repo.Name, *pullRequestEvent.PullRequest.Head.SHA}
-			build := &mongo.Build{branch, pullRequestEvent, nil, bson.NewObjectId(), true}
+			build := &mongo.Build{branch, pullRequestEvent, nil, bson.NewObjectId(), true, time.Now().Unix()}
 			client := build.Branch.GetRepository().GetGithubClient()
 			content, _ := getGithubFileContent(client, build.Branch, deploy_file)
 			content = []byte(strings.Replace(string(content), "{{sha}}", build.Branch.Sha, -1))
@@ -41,7 +42,7 @@ func ProcessHook(event, body string) {
 			panic(err)
 		}
 		branch := mongo.Branch{*pushEvent.Repo.Owner.Name, *pushEvent.Repo.Name, *pushEvent.After}
-		build := &mongo.Build{branch, pushEvent, nil, bson.NewObjectId(), true}
+		build := &mongo.Build{branch, pushEvent, nil, bson.NewObjectId(), true, time.Now().Unix()}
 		client := build.Branch.GetRepository().GetGithubClient()
 		content, _ := getGithubFileContent(client, build.Branch, deploy_file)
 		content = []byte(strings.Replace(string(content), "{{sha}}", build.Branch.Sha, -1))

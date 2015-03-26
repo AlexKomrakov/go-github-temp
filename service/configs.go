@@ -1,4 +1,4 @@
-package server
+package service
 
 import (
 	"gopkg.in/yaml.v2"
@@ -11,6 +11,10 @@ const (
 
 type ServerConfig struct {
 	Adress string
+    Logs   struct {
+        Error string
+        Gohub string
+    }
 }
 
 //type DeployConfig struct {
@@ -22,12 +26,17 @@ type ServerConfig struct {
 //	}
 //}
 
-func GetServerConfig() (config ServerConfig, err error) {
+func GetServerConfig() (config ServerConfig) {
 	b, err := ioutil.ReadFile(config_file)
 	if err != nil {
-		return
+		panic(err)
 	}
+
 	err = yaml.Unmarshal(b, &config)
+    if err != nil {
+        panic(err)
+    }
+
 	return
 }
 

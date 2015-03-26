@@ -5,13 +5,17 @@ import (
     "github.com/codegangsta/negroni"
     "github.com/stretchr/graceful"
     "time"
+    "log"
+    "net/http"
+    "github.com/alexkomrakov/gohub/service"
 )
 
 func main() {
-    config, _ := server.GetServerConfig()
+    config := service.GetServerConfig()
     router := server.Router()
 
-    n := negroni.Classic()
+    n := negroni.New(service.GetRecoveryLogger(config.Logs.Error), negroni.NewLogger(), negroni.NewStatic(http.Dir("public")))
     n.UseHandler(router)
+    log.Println("Starting server on address " + config.Adress)
     graceful.Run(config.Adress, 30*time.Second, n)
 }

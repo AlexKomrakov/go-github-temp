@@ -3,12 +3,14 @@ package server
 import (
 //	"github.com/alexkomrakov/gohub/mongo"
 
-//	"github.com/gorilla/mux"
+	"github.com/gorilla/mux"
 	"github.com/unrolled/render"
+    "github.com/ActiveState/tail"
 
 //	"encoding/json"
 	"net/http"
     "log"
+    "github.com/alexkomrakov/gohub/service"
     "os"
 )
 
@@ -16,18 +18,23 @@ var r *render.Render
 var l *log.Logger
 
 func init() {
+    config := service.GetServerConfig()
 	r = render.New(render.Options{Layout: "base"})
-
-    f, err := os.OpenFile("logs", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
-    if err != nil {
-        panic(err)
-    }
-
-    l = log.New(f, "[gohub] ", log.Ldate | log.Ltime)
+    l = service.GetFileLogger(config.Logs.Gohub)
 }
 
 func Index(res http.ResponseWriter, req *http.Request) {
 	r.HTML(res, http.StatusOK, "index", nil)
+}
+
+func Logs(res http.ResponseWriter, req *http.Request) {
+    params := mux.Vars(req)
+    t, err := tail.TailFile(params["name"] + ".log", tail.Config{Follow: false, Location: &tail.SeekInfo{0, os.SEEK_SET}})
+    if err != nil {
+        panic(err)
+    }
+
+	r.HTML(res, http.StatusOK, "logs", t)
 }
 
 //func SetHook(res http.ResponseWriter, req *http.Request) {

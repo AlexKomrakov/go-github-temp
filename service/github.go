@@ -11,3 +11,4 @@ func GetGithubClient(token string) *github.Client {
     }
     return github.NewClient(transport.Client())
 }
+

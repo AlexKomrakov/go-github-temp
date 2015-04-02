@@ -12,6 +12,8 @@ import (
     "log"
     "github.com/alexkomrakov/gohub/service"
     "os"
+
+//    "github.com/goincremental/negroni-sessions"
 )
 
 var r *render.Render
@@ -24,6 +26,9 @@ func init() {
 }
 
 func Index(res http.ResponseWriter, req *http.Request) {
+//    session := sessions.GetSession(req)
+//    session.Set("hello", "world")
+
 	r.HTML(res, http.StatusOK, "index", nil)
 }
 

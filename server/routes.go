@@ -7,6 +7,8 @@ import (
 func Router() (router *mux.Router) {
 	router = mux.NewRouter()
 	router.HandleFunc("/", Index).Methods("GET")
+	router.HandleFunc("/login", Login).Methods("GET", "POST")
+	router.HandleFunc("/logout", Logout).Methods("GET")
 	router.HandleFunc("/logs/{name}", Logs).Methods("GET")
 //	router.HandleFunc("/repos", GetReposApi).Methods("GET")
 //	router.HandleFunc("/repos/{user}/{repo}", RepoPage).Methods("GET")

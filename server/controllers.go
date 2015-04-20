@@ -7,17 +7,30 @@ import (
 	"github.com/unrolled/render"
     "github.com/ActiveState/tail"
 
-//	"encoding/json"
 	"net/http"
     "log"
     "github.com/alexkomrakov/gohub/service"
     "os"
 
-//    "github.com/goincremental/negroni-sessions"
+    "github.com/goincremental/negroni-sessions"
 )
 
 var r *render.Render
 var l *log.Logger
+
+type ViewData struct {
+    User  interface{} `json:"user,omitempty"`
+    Token interface{} `json:"token,omitempty"`
+    Data  interface{} `json:"data,omitempty"`
+}
+
+func Render(res http.ResponseWriter, req *http.Request, view string, data interface {}) {
+    session := sessions.GetSession(req)
+    user  := session.Get("user")
+    token := session.Get("token")
+
+    r.HTML(res, http.StatusOK, view, ViewData{User: user, Token: token, Data: data})
+}
 
 func init() {
     config := service.GetServerConfig()
@@ -26,10 +39,31 @@ func init() {
 }
 
 func Index(res http.ResponseWriter, req *http.Request) {
-//    session := sessions.GetSession(req)
-//    session.Set("hello", "world")
+    Render(res, req, "index", nil)
+}
 
-	r.HTML(res, http.StatusOK, "index", nil)
+func Logout(res http.ResponseWriter, req *http.Request) {
+    session := sessions.GetSession(req)
+    session.Delete("user")
+    session.Delete("token")
+
+    http.Redirect(res, req, "/", http.StatusFound)
+}
+
+func Login(res http.ResponseWriter, req *http.Request) {
+    req.ParseForm()
+    token := req.FormValue("token")
+
+    client := service.GetGithubClient(token)
+    user, _, _ := client.Users.Get("")
+    if user != nil {
+        session := sessions.GetSession(req)
+        session.Set("user", user.Login)
+        session.Set("token", token)
+        http.Redirect(res, req, "/", http.StatusFound)
+    }
+
+    Render(res, req, "login", nil)
 }
 
 func Logs(res http.ResponseWriter, req *http.Request) {
@@ -39,7 +73,7 @@ func Logs(res http.ResponseWriter, req *http.Request) {
         panic(err)
     }
 
-	r.HTML(res, http.StatusOK, "logs", t)
+    Render(res, req, "logs", t)
 }
 
 //func SetHook(res http.ResponseWriter, req *http.Request) {

@@ -1,4 +1,4 @@
 adress: 0.0.0.0:9000
 logs:
    error: error.log
-   gohub: gohub.log
+   gohub: info.log

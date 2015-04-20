@@ -16,7 +16,28 @@
 
 <nav class="uk-navbar uk-navbar-attached bg-blue">
     <div class="uk-container uk-container-center">
-        <a class="uk-navbar-brand uk-hidden-small" href="/">Repositories</a>
+        <div class="uk-navbar-nav">
+            <li class="uk-parent" data-uk-dropdown="" aria-haspopup="true" aria-expanded="false">
+                <a href="#">Logs</a>
+                <div class="uk-dropdown uk-dropdown-navbar">
+                    <ul class="uk-nav uk-nav-navbar">
+                        <li><a href="/logs/info">Info</a></li>
+                        <li><a href="/logs/error">Error</a></li>
+                    </ul>
+                </div>
+            </li>
+        </div>
+        <div class="uk-navbar-flip">
+            <ul class="uk-navbar-nav">
+                {{ if .User }}
+                    <li>
+                        <a href="/logout" class="uk-navbar-nav-subtitle">Logout<div>{{ .User }}</div></a>
+                    </li>
+                {{ else }}
+                    <li><a href="/login">Login</a></li>
+                {{ end }}
+            </ul>
+        </div>
     </div>
 </nav>
 

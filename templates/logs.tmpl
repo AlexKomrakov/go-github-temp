@@ -2,7 +2,7 @@
 
     <div class="section bg-red text-white">
         <div class="uk-container uk-container-center uk-text-center">
-            {{range $line := .Lines}}
+            {{range $line := .Data.Lines}}
                 <div>{{$line.Text}}</div>
             {{ end }}
         </div>

@@ -10,8 +10,11 @@ func Router() (router *mux.Router) {
 	router.HandleFunc("/login", Login).Methods("GET", "POST")
 	router.HandleFunc("/logout", Logout).Methods("GET")
 	router.HandleFunc("/logs/{name}", Logs).Methods("GET")
-//	router.HandleFunc("/repos", GetReposApi).Methods("GET")
-//	router.HandleFunc("/repos/{user}/{repo}", RepoPage).Methods("GET")
+	router.HandleFunc("/repos/{user}", UserRepos).Methods("GET")
+	router.HandleFunc("/repos/{user}/{repo}/add", AddRepo).Methods("GET")
+	router.HandleFunc("/repos/{user}/{repo}/delete", DeleteRepo).Methods("GET")
+
+	//	router.HandleFunc("/repos", GetReposApi).Methods("GET")
 //	router.HandleFunc("/repos/{user}/{repo}/hook", SetHook).Methods("GET")
 //	router.HandleFunc("/repos/{user}/{repo}/{build}", BuildPage).Methods("GET")
 //	router.HandleFunc("/repos", PostReposApi).Methods("POST")

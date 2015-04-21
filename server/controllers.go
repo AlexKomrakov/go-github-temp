@@ -1,7 +1,7 @@
 package server
 
 import (
-//	"github.com/alexkomrakov/gohub/mongo"
+	"github.com/alexkomrakov/gohub/mongo"
 
 	"github.com/gorilla/mux"
 	"github.com/unrolled/render"
@@ -27,9 +27,8 @@ type ViewData struct {
 func Render(res http.ResponseWriter, req *http.Request, view string, data interface {}) {
     session := sessions.GetSession(req)
     user  := session.Get("user")
-    token := session.Get("token")
 
-    r.HTML(res, http.StatusOK, view, ViewData{User: user, Token: token, Data: data})
+    r.HTML(res, http.StatusOK, view, ViewData{User: user, Data: data})
 }
 
 func init() {
@@ -42,10 +41,45 @@ func Index(res http.ResponseWriter, req *http.Request) {
     Render(res, req, "index", nil)
 }
 
+func UserRepos(res http.ResponseWriter, req *http.Request) {
+    session := sessions.GetSession(req)
+    user := session.Get("user").(string)
+    token := mongo.GetToken(user)
+    client := service.GetGithubClient(token)
+    github_repos, _, _ := client.Repositories.List("", nil)
+    gohub_repos := mongo.GetRepositories(user)
+
+    Render(res, req, "repos", map[string]interface{}{"Github": github_repos, "Gohub": gohub_repos})
+}
+
+func AddRepo(res http.ResponseWriter, req *http.Request) {
+    params := mux.Vars(req)
+
+    session := sessions.GetSession(req)
+    user := session.Get("user").(string)
+    token := mongo.GetToken(user)
+    client := service.GetGithubClient(token)
+    repo, _, _ := client.Repositories.Get(user, params["repo"])
+    if repo != nil {
+        mongo.Repository{User: *repo.Owner.Login, Repository: *repo.Name}.Store()
+        http.Redirect(res, req, "/repos/"+*repo.Owner.Login, http.StatusFound)
+    } else {
+        panic("Can't find repo")
+    }
+}
+
+func DeleteRepo(res http.ResponseWriter, req *http.Request) {
+    params := mux.Vars(req)
+    session := sessions.GetSession(req)
+    user := session.Get("user").(string)
+    mongo.Repository{User: user, Repository: params["repo"]}.Delete()
+
+    http.Redirect(res, req, "/repos/"+user, http.StatusFound)
+}
+
 func Logout(res http.ResponseWriter, req *http.Request) {
     session := sessions.GetSession(req)
     session.Delete("user")
-    session.Delete("token")
 
     http.Redirect(res, req, "/", http.StatusFound)
 }
@@ -59,7 +93,8 @@ func Login(res http.ResponseWriter, req *http.Request) {
     if user != nil {
         session := sessions.GetSession(req)
         session.Set("user", user.Login)
-        session.Set("token", token)
+        mongo.Token{User: *user.Login, Token: token}.Store()
+
         http.Redirect(res, req, "/", http.StatusFound)
     }
 

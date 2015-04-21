@@ -1,0 +1,43 @@
+<div class="uk-container uk-container-center uk-margin-top">
+
+    <table class="uk-table">
+        <caption>Gohub repositories</caption>
+        <thead>
+        <tr>
+            <th width="50%">Name</th>
+            <th>URL</th>
+            <th width="10%">Menu</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{ range $key, $value := .Data.Gohub }}
+        <tr>
+            <td>{{ $value.Repository }}</td>
+            <td><a href="/repos/{{ $.User }}/{{ $value.Repository }}">{{ .User }}/{{ $value.Repository }}</a></td>
+            <td><a href="/repos/{{ $.User }}/{{ $value.Repository }}/delete"><i class="uk-icon-times"></i></a></td>
+        </tr>
+        {{ end }}
+        </tbody>
+    </table>
+
+    <table class="uk-table">
+        <caption>Github repositories</caption>
+        <thead>
+        <tr>
+            <th width="50%">Name</th>
+            <th>HTMLURL</th>
+            <th width="10%">Menu</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{ range $key, $value := .Data.Github }}
+        <tr>
+            <td>{{ $value.Name }}</td>
+            <td><a href="{{ $value.HTMLURL }}" target="_blank">{{ $value.HTMLURL }}</a></td>
+            <td><a href="/repos/{{ $.User }}/{{ $value.Name }}/add"><i class="uk-icon-plus"></i></a></td>
+        </tr>
+        {{ end }}
+        </tbody>
+    </table>
+
+</div>

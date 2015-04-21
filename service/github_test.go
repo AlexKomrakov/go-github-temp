@@ -6,11 +6,15 @@ import (
 )
 
 func TestGetGithubClient(t *testing.T) {
-    client := GetGithubClient("7bd2ae71bf78ab0489052ef560ab53771f372980")
+    client := GetGithubClient("")
     assert.NotNil(t, client)
 
-    user, _, _ := client.Users.Get("")
-    fmt.Print(user)
+//    user, _, _ := client.Users.Get("")
+//    fmt.Print(user)
+
+    repos, _, _ := client.Repositories.List("", nil)
+    fmt.Print(repos)
+
 }
 
 

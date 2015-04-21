@@ -1,25 +1,81 @@
-//package mongo
-//
-//import (
+package mongo
+
+import (
 //	"code.google.com/p/goauth2/oauth"
 //	"github.com/google/go-github/github"
-//	mgo "gopkg.in/mgo.v2"
-//	"gopkg.in/mgo.v2/bson"
-//)
-//
-//const (
-//	url               = "localhost"
-//	repos_collection  = "repositories"
-//	builds_collection = "builds"
-//	database          = "gohub"
-//)
-//
-//type Repository struct {
-//	User       string `json:"user"`
-//	Repository string `json:"repository"`
-//	Token      string `json:"token"`
-//}
-//
+	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+)
+
+const (
+	url               = "localhost"
+	repos_collection  = "repositories"
+	builds_collection = "builds"
+	database          = "gohub"
+	tokens_collection = "tokens"
+)
+
+type Repository struct {
+	User       string `json:"user"`
+	Repository string `json:"repository"`
+}
+
+type Token struct {
+	User  string `json:"user"`
+	Token string `json:"token"`
+}
+
+//TODO defer session.Close()
+func getDb() (db *mgo.Database) {
+	session, err := mgo.Dial(url)
+	if err != nil {
+		panic(err)
+	}
+	db = session.DB(database)
+
+	return
+}
+
+func GetRepositories(user string) (repositories []Repository) {
+	c := getDb().C(repos_collection)
+	err := c.Find(bson.M{"user": user}).All(&repositories)
+	if err != nil {
+		panic(err)
+	}
+
+	return
+}
+
+func (r Repository) Store() {
+	err := getDb().C(repos_collection).Insert(&r)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (r Repository) Delete() {
+	err := getDb().C(repos_collection).Remove(r)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (t Token) Store() {
+	err := getDb().C(tokens_collection).Insert(&t)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func GetToken(user string) string {
+	var t Token
+	err := getDb().C(tokens_collection).Find(bson.M{"user": user}).One(&t)
+	if err != nil {
+		panic(err)
+	}
+	return t.Token
+}
+
 //func (r *Repository) GetGithubClient() *github.Client {
 //	transport := &oauth.Transport{
 //		Token: &oauth.Token{AccessToken: r.Token},
@@ -85,33 +141,7 @@
 //	return
 //}
 //
-////TODO defer session.Close()
-//func getDb() *mgo.Database {
-//	session, err := mgo.Dial(url)
-//	if err != nil {
-//		panic(err)
-//	}
-//	db := session.DB(database)
-//	return db
-//}
-//
-//func AddRepository(repo *Repository) {
-//	c := getDb().C(repos_collection)
-//	err := c.Insert(&repo)
-//	if err != nil {
-//		panic(err)
-//	}
-//}
-//
-//func GetRepositories() []Repository {
-//	c := getDb().C(repos_collection)
-//	var repositories []Repository
-//	err := c.Find(bson.M{}).All(&repositories)
-//	if err != nil {
-//		panic(err)
-//	}
-//	return repositories
-//}
+
 //
 //func RemoveRepository(repo *Repository) {
 //	c := getDb().C(repos_collection)

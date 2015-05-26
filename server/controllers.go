@@ -77,6 +77,34 @@ func DeleteRepo(res http.ResponseWriter, req *http.Request) {
     http.Redirect(res, req, "/repos/"+user, http.StatusFound)
 }
 
+func UserServers(res http.ResponseWriter, req *http.Request) {
+    session := sessions.GetSession(req)
+    user := session.Get("user").(string)
+    servers := mongo.GetServers(user)
+
+    Render(res, req, "servers", map[string]interface{}{"Servers": servers})
+}
+
+func AddServer(res http.ResponseWriter, req *http.Request) {
+    session := sessions.GetSession(req)
+    user := session.Get("user").(string)
+    req.ParseForm()
+
+    mongo.Server{User: user, User_host: req.PostFormValue("user_host"), Password: req.PostFormValue("password") }.Store()
+
+    http.Redirect(res, req, "/servers/"+user, http.StatusFound)
+}
+
+func DeleteServer(res http.ResponseWriter, req *http.Request) {
+    session := sessions.GetSession(req)
+    user := session.Get("user").(string)
+    req.ParseForm()
+
+    mongo.Server{User: user, User_host: req.PostFormValue("user_host"), Password: req.PostFormValue("password") }.Delete()
+
+    http.Redirect(res, req, "/servers/"+user, http.StatusFound)
+}
+
 func Logout(res http.ResponseWriter, req *http.Request) {
     session := sessions.GetSession(req)
     session.Delete("user")

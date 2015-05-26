@@ -8,16 +8,23 @@ import (
 )
 
 const (
-	url               = "localhost"
-	repos_collection  = "repositories"
-	builds_collection = "builds"
-	database          = "gohub"
-	tokens_collection = "tokens"
+	url                = "localhost"
+	repos_collection   = "repositories"
+	servers_collection = "servers"
+	builds_collection  = "builds"
+	database           = "gohub"
+	tokens_collection  = "tokens"
 )
 
 type Repository struct {
 	User       string `json:"user"`
 	Repository string `json:"repository"`
+}
+
+type Server struct {
+	User      string `json:"user"`
+	User_host string `json:"user_host"`
+	Password  string `json:"password"`
 }
 
 type Token struct {
@@ -44,6 +51,30 @@ func GetRepositories(user string) (repositories []Repository) {
 	}
 
 	return
+}
+
+func GetServers(user string) (servers []Server) {
+	c := getDb().C(servers_collection)
+	err := c.Find(bson.M{"user": user}).All(&servers)
+	if err != nil {
+		panic(err)
+	}
+
+	return
+}
+
+func (r Server) Store() {
+	err := getDb().C(servers_collection).Insert(&r)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (r Server) Delete() {
+	err := getDb().C(servers_collection).Remove(r)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (r Repository) Store() {

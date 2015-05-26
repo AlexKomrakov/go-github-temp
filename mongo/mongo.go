@@ -5,6 +5,9 @@ import (
 //	"github.com/google/go-github/github"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"golang.org/x/crypto/ssh"
+
+	"strings"
 )
 
 const (
@@ -25,6 +28,7 @@ type Server struct {
 	User      string `json:"user"`
 	User_host string `json:"user_host"`
 	Password  string `json:"password"`
+	Checked   bool   `json:"checked"`
 }
 
 type Token struct {
@@ -77,6 +81,12 @@ func (r Server) Delete() {
 	}
 }
 
+func (s Server) Check() bool {
+	_, err := getSshClient(s.User_host, s.Password)
+
+	return err == nil
+}
+
 func (r Repository) Store() {
 	err := getDb().C(repos_collection).Insert(&r)
 	if err != nil {
@@ -105,6 +115,26 @@ func GetToken(user string) string {
 		panic(err)
 	}
 	return t.Token
+}
+
+func getSshClient(user_host, password string) (client *ssh.Client, err error) {
+	params := strings.Split(user_host, "@")
+	if len(params) != 2 {
+		panic("Wrong ssh user@host: " + user_host)
+	}
+	user := params[0]
+	host := params[1]
+
+	config := &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.Password(password),
+			//ssh.PublicKeys(key),
+		},
+	}
+	client, err = ssh.Dial("tcp", host, config)
+
+	return client, err
 }
 
 //func (r *Repository) GetGithubClient() *github.Client {

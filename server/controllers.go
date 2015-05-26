@@ -13,6 +13,8 @@ import (
     "os"
 
     "github.com/goincremental/negroni-sessions"
+
+    "github.com/gorilla/schema"
 )
 
 var r *render.Render
@@ -90,7 +92,9 @@ func AddServer(res http.ResponseWriter, req *http.Request) {
     user := session.Get("user").(string)
     req.ParseForm()
 
-    mongo.Server{User: user, User_host: req.PostFormValue("user_host"), Password: req.PostFormValue("password") }.Store()
+    server := mongo.Server{User: user, User_host: req.PostFormValue("user_host"), Password: req.PostFormValue("password") }
+    server.Checked = server.Check()
+    server.Store()
 
     http.Redirect(res, req, "/servers/"+user, http.StatusFound)
 }
@@ -100,7 +104,10 @@ func DeleteServer(res http.ResponseWriter, req *http.Request) {
     user := session.Get("user").(string)
     req.ParseForm()
 
-    mongo.Server{User: user, User_host: req.PostFormValue("user_host"), Password: req.PostFormValue("password") }.Delete()
+    server := new(mongo.Server)
+    schema.NewDecoder().Decode(server, req.PostForm)
+    log.Println(server)
+    server.Delete()
 
     http.Redirect(res, req, "/servers/"+user, http.StatusFound)
 }

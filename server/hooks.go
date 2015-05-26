@@ -89,30 +89,8 @@ package server
 //	key, err = ssh.ParsePrivateKey(buf)
 //	return
 //}
-//
-//func getSshClient(user_host string) (client *ssh.Client, err error) {
-//	key, err := getKeyFile()
-//	if err != nil {
-//		return
-//	}
-//
-//	params := strings.Split(user_host, "@")
-//	if len(params) != 2 {
-//		panic("Wrong ssh user@host in config: " + user_host)
-//	}
-//	user := params[0]
-//	host := params[1]
-//
-//	config := &ssh.ClientConfig{
-//		User: user,
-//		Auth: []ssh.AuthMethod{
-//			// ssh.Password(ssh_pass),
-//			ssh.PublicKeys(key),
-//		},
-//	}
-//	client, err = ssh.Dial("tcp", host, config)
-//	return client, err
-//}
+
+
 //
 //func runCommands(build *mongo.Build, client *github.Client, event string, config DeployConfig) {
 //	var commands []mongo.Command

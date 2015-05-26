@@ -17,18 +17,26 @@
         <tr>
             <th width="50%">Server</th>
             <th>Checked</th>
-            <th>Delete</th>
+            <th>Actions</th>
         </tr>
         </thead>
         <tbody>
         {{ range $key, $value := .Data.Servers }}
         <tr>
             <td>{{ $value.User_host }}</td>
-            <td>{{ $value.Password }}</td>
+            <td>
+                {{ if $value.Checked }}
+                <span class="uk-badge uk-badge-success">Success</span>
+                {{ else }}
+                <span class="uk-badge uk-badge-danger">Error</span>
+                {{ end }}
+            </td>
             <td>
                 <form class="uk-form" method="post" action="/servers/{{ .User }}/delete">
+                    <input type="hidden" name="user" placeholder="" value="{{ $value.User }}">
                     <input type="hidden" name="user_host" placeholder="" value="{{ $value.User_host }}">
                     <input type="hidden" name="password" placeholder="" value="{{ $value.Password }}">
+                    <input type="hidden" name="checked" placeholder="" value="{{ $value.Checked }}">
                     <button type="submit" class="uk-button">Delete</button>
                 </form>
             </td>

@@ -2,8 +2,9 @@ package server
 
 import (
 	"github.com/alexkomrakov/gohub/mongo"
+    "github.com/google/go-github/github"
 
-	"github.com/gorilla/mux"
+    "github.com/gorilla/mux"
 	"github.com/unrolled/render"
     "github.com/ActiveState/tail"
 
@@ -15,6 +16,7 @@ import (
     "github.com/goincremental/negroni-sessions"
 
     "github.com/gorilla/schema"
+    "strings"
 )
 
 var r *render.Render
@@ -79,6 +81,25 @@ func DeleteRepo(res http.ResponseWriter, req *http.Request) {
     http.Redirect(res, req, "/repos/"+user, http.StatusFound)
 }
 
+func ShowRepo(res http.ResponseWriter, req *http.Request) {
+    params := mux.Vars(req)
+    session := sessions.GetSession(req)
+    user := session.Get("user").(string)
+    token := mongo.GetToken(user)
+    client := service.GetGithubClient(token)
+    repo, _, _ := client.Repositories.Get(user, params["repo"])
+    hooks, _, _ := client.Repositories.ListHooks(user, params["repo"], &github.ListOptions{})
+    branches, _, _ := client.Git.ListRefs(user, params["repo"], &github.ReferenceListOptions{})
+    var filtered_branches []github.Reference
+    for _, branch := range branches {
+        if strings.HasPrefix(*branch.Ref, "refs/heads/") {
+            filtered_branches = append(filtered_branches, branch)
+        }
+    }
+
+    Render(res, req, "repo", map[string]interface{}{"Repo": repo, "Hooks": hooks, "Branches": filtered_branches})
+}
+
 func UserServers(res http.ResponseWriter, req *http.Request) {
     session := sessions.GetSession(req)
     user := session.Get("user").(string)
@@ -106,7 +127,6 @@ func DeleteServer(res http.ResponseWriter, req *http.Request) {
 
     server := new(mongo.Server)
     schema.NewDecoder().Decode(server, req.PostForm)
-    log.Println(server)
     server.Delete()
 
     http.Redirect(res, req, "/servers/"+user, http.StatusFound)

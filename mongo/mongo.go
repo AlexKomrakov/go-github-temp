@@ -101,6 +101,15 @@ func (r Repository) Delete() {
 	}
 }
 
+func (r Repository) Find() (repo Repository) {
+	err := getDb().C(repos_collection).Find(r).One(&repo)
+	if err != nil {
+		panic(err)
+	}
+
+	return
+}
+
 func (t Token) Store() {
 	err := getDb().C(tokens_collection).Insert(&t)
 	if err != nil {

@@ -1,0 +1,12 @@
+<div class="uk-container uk-container-center uk-margin-top">
+
+    REPOSITORY
+    {{.Data.Repo}}
+    {{.Data.Hooks}}
+
+    {{ range $key, $value := .Data.Branches }}
+        {{ $value.Ref }}
+        {{ $value.Object.SHA }}
+    {{end}}
+
+</div>

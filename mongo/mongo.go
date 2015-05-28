@@ -25,6 +25,7 @@ type Repository struct {
 }
 
 type Server struct {
+	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
 	User      string `json:"user"`
 	User_host string `json:"user_host"`
 	Password  string `json:"password"`

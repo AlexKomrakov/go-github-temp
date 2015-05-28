@@ -21,6 +21,7 @@ import (
 
 var r *render.Render
 var l *log.Logger
+var config service.ServerConfig
 
 type ViewData struct {
     User  interface{} `json:"user,omitempty"`
@@ -36,7 +37,7 @@ func Render(res http.ResponseWriter, req *http.Request, view string, data interf
 }
 
 func init() {
-    config := service.GetServerConfig()
+    config = service.GetServerConfig()
 	r = render.New(render.Options{Layout: "base"})
     l = service.GetFileLogger(config.Logs.Gohub)
 }
@@ -98,6 +99,18 @@ func ShowRepo(res http.ResponseWriter, req *http.Request) {
     }
 
     Render(res, req, "repo", map[string]interface{}{"Repo": repo, "Hooks": hooks, "Branches": filtered_branches})
+}
+
+func ShowCommit(res http.ResponseWriter, req *http.Request) {
+    params := mux.Vars(req)
+    session := sessions.GetSession(req)
+    user := session.Get("user").(string)
+    token := mongo.GetToken(user)
+    client := service.GetGithubClient(token)
+    repo, _, _ := client.Repositories.Get(user, params["repo"])
+    commit, _, _ := client.Repositories.GetCommit(user, params["repo"], params["sha"])
+
+    Render(res, req, "commit", map[string]interface{}{"Repo": repo, "Commit": commit})
 }
 
 func UserServers(res http.ResponseWriter, req *http.Request) {

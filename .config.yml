@@ -1,4 +1,5 @@
 adress: 0.0.0.0:9000
+deploy: .deploy.yml
 logs:
    error: error.log
    gohub: info.log

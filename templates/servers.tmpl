@@ -23,6 +23,7 @@
         <tbody>
         {{ range $key, $value := .Data.Servers }}
         <tr>
+            <!--{{ $value.Id.Hex }}-->
             <td>{{ $value.User_host }}</td>
             <td>
                 {{ if $value.Checked }}

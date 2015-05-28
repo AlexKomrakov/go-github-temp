@@ -11,6 +11,7 @@ const (
 
 type ServerConfig struct {
 	Adress string
+	Deploy string
     Logs   struct {
         Error string
         Gohub string

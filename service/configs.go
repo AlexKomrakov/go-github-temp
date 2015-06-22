@@ -18,14 +18,15 @@ type ServerConfig struct {
     }
 }
 
-//type DeployConfig struct {
-//	Host         string
-//	Pull_request struct{ Commands []map[string]string }
-//	Push         struct {
-//		Branch   string
-//		Commands []map[string]string
-//	}
-//}
+type DeployScenario struct {
+	Branch string
+	Host   string
+	Commands []map[string]string
+}
+
+type DeployConfig struct {
+	Scenarios []map[string]DeployScenario
+}
 
 func GetServerConfig() (config ServerConfig) {
 	b, err := ioutil.ReadFile(config_file)
@@ -41,7 +42,7 @@ func GetServerConfig() (config ServerConfig) {
 	return
 }
 
-//func GetYamlConfig(file []byte) (config DeployConfig, err error) {
-//	err = yaml.Unmarshal(file, &config)
-//	return
-//}
+func GetYamlConfig(file []byte) (config DeployConfig, err error) {
+	err = yaml.Unmarshal(file, &config)
+	return
+}

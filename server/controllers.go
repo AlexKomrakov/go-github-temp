@@ -109,8 +109,10 @@ func ShowCommit(res http.ResponseWriter, req *http.Request) {
     client := service.GetGithubClient(token)
     repo, _, _ := client.Repositories.Get(user, params["repo"])
     commit, _, _ := client.Repositories.GetCommit(user, params["repo"], params["sha"])
+    file, _ := service.GetFileContent(client, user, params["repo"], params["sha"], config.Deploy)
+    deploy, _ := service.GetYamlConfig(file)
 
-    Render(res, req, "commit", map[string]interface{}{"Repo": repo, "Commit": commit})
+    Render(res, req, "commit", map[string]interface{}{"Repo": repo, "Commit": commit, "File": string(file), "Deploy": deploy})
 }
 
 func UserServers(res http.ResponseWriter, req *http.Request) {

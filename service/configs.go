@@ -24,10 +24,6 @@ type DeployScenario struct {
 	Commands []map[string]string
 }
 
-type DeployConfig struct {
-	Scenarios []map[string]DeployScenario
-}
-
 func GetServerConfig() (config ServerConfig) {
 	b, err := ioutil.ReadFile(config_file)
 	if err != nil {
@@ -42,7 +38,7 @@ func GetServerConfig() (config ServerConfig) {
 	return
 }
 
-func GetYamlConfig(file []byte) (config DeployConfig, err error) {
+func GetYamlConfig(file []byte) (config map[string]DeployScenario, err error) {
 	err = yaml.Unmarshal(file, &config)
 	return
 }

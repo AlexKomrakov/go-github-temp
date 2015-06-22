@@ -82,10 +82,23 @@ func (r Server) Delete() {
 	}
 }
 
+func (r Server) Find() (s Server) {
+	err := getDb().C(servers_collection).Find(r).One(&s)
+	if err != nil {
+		panic(err)
+	}
+
+	return
+}
+
 func (s Server) Check() bool {
-	_, err := getSshClient(s.User_host, s.Password)
+	_, err := GetSshClient(s.User_host, s.Password)
 
 	return err == nil
+}
+
+func (s Server) Client() (client *ssh.Client, err error) {
+	return GetSshClient(s.User_host, s.Password)
 }
 
 func (r Repository) Store() {
@@ -127,7 +140,7 @@ func GetToken(user string) string {
 	return t.Token
 }
 
-func getSshClient(user_host, password string) (client *ssh.Client, err error) {
+func GetSshClient(user_host, password string) (client *ssh.Client, err error) {
 	params := strings.Split(user_host, "@")
 	if len(params) != 2 {
 		panic("Wrong ssh user@host: " + user_host)

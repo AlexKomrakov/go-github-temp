@@ -13,7 +13,7 @@
     <pre>{{.Data.File}}</pre>
 
     {{ range $key, $value := .Data.Deploy }}
-        <button class="uk-button uk-button-success uk-margin-top">{{$key}}</button>
+        <a class="uk-button uk-button-success uk-margin-top" href="/repos/{{$.Data.Repo.Owner.Login}}/{{$.Data.Repo.Name}}/commit/{{$.Data.Commit.SHA}}/run/{{$key}}">{{$key}}</a>
     {{end}}
 
 </div>

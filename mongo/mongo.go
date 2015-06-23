@@ -83,9 +83,9 @@ func (r Server) Delete() {
 }
 
 func (r Server) Find() (s Server) {
-	err := getDb().C(servers_collection).Find(r).One(&s)
+	err := getDb().C(servers_collection).Find(bson.M{"user": r.User, "user_host": r.User_host}).One(&s)
 	if err != nil {
-		panic(err)
+		panic(r)
 	}
 
 	return

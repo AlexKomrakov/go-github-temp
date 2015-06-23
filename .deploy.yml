@@ -11,7 +11,7 @@ push:
    branch: refs/heads/master
    host: root@188.166.34.149:22
    commands:
-     - exec: go get -u github.com/alexkomrakov/gohub
+     - ssh: go get -u github.com/alexkomrakov/gohub
 test:
   host: root@188.166.34.149:22
   commands:

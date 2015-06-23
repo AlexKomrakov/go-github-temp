@@ -7,18 +7,28 @@ import (
 	"github.com/alexkomrakov/gohub/mongo"
 )
 
-func RunCommands(config DeployScenario, client *github.Client, user, repo, sha string) {
+type CommandResponse struct {
+	Type    string
+	Command string
+	Error   error
+	Output  string
+}
+
+func RunCommands(config DeployScenario, client *github.Client, user, repo, sha string) (result []CommandResponse) {
 	server := mongo.Server{User: user, User_host: config.Host}.Find()
 	for _, command := range config.Commands {
 		for commandType, actionStr := range command {
 			if commandType == "status" {
-				SetGitStatus(client, user, repo, sha, actionStr)
+				out, err := SetGitStatus(client, user, repo, sha, actionStr)
+				result = append(result, CommandResponse{Type: commandType, Command: actionStr, Output: out, Error: err})
 			}
 			if commandType == "ssh" {
-				ExecSshCommand(server, actionStr)
+				out, err := ExecSshCommand(server, actionStr)
+				result = append(result, CommandResponse{Type: commandType, Command: actionStr, Output: out, Error: err})
 			}
 		}
 	}
+	return
 }
 
 func ExecSshCommand(server mongo.Server, command string) (out string, err error) {

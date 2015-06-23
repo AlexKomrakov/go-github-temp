@@ -115,6 +115,19 @@ func ShowCommit(res http.ResponseWriter, req *http.Request) {
     Render(res, req, "commit", map[string]interface{}{"Repo": repo, "Commit": commit, "File": string(file), "Deploy": deploy})
 }
 
+func RunScenario(res http.ResponseWriter, req *http.Request) {
+    params := mux.Vars(req)
+    session := sessions.GetSession(req)
+    user := session.Get("user").(string)
+    token := mongo.GetToken(user)
+    client := service.GetGithubClient(token)
+    file, _ := service.GetFileContent(client, user, params["repo"], params["sha"], config.Deploy)
+    deploy, _ := service.GetYamlConfig(file)
+    commands := service.RunCommands(deploy[params["scenario"]], client, user, params["repo"], params["sha"])
+
+    Render(res, req, "run", map[string]interface{}{"Commands": commands})
+}
+
 func UserServers(res http.ResponseWriter, req *http.Request) {
     session := sessions.GetSession(req)
     user := session.Get("user").(string)

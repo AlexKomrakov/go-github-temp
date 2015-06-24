@@ -125,7 +125,7 @@ func RunScenario(res http.ResponseWriter, req *http.Request) {
     deploy, _ := service.GetYamlConfig(file)
     commands := service.RunCommands(deploy[params["scenario"]], client, user, params["repo"], params["sha"])
 
-    Render(res, req, "run", map[string]interface{}{"Commands": commands})
+    Render(res, req, "run", map[string]interface{}{"Params": params, "Commands": commands})
 }
 
 func UserServers(res http.ResponseWriter, req *http.Request) {

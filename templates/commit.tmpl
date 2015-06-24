@@ -5,15 +5,18 @@
     <h3><a href="{{.Data.Repo.HTMLURL}}">{{.Data.Repo.FullName}}</a></h3>
 
     <div>
-        {{.Data.Commit.Commit.Message}}
-    </div>
-    <div>
         {{.Data.Commit.SHA}}
     </div>
+    <div>
+        <small>{{.Data.Commit.Commit.Message}}</small>
+    </div>
+
+    <h3 class="uk-panel-title uk-margin-top">Deploy file content</h3>
     <pre>{{.Data.File}}</pre>
 
+    <h3 class="uk-panel-title">Run scenario</h3>
     {{ range $key, $value := .Data.Deploy }}
-        <a class="uk-button uk-button-success uk-margin-top" href="/repos/{{$.Data.Repo.Owner.Login}}/{{$.Data.Repo.Name}}/commit/{{$.Data.Commit.SHA}}/run/{{$key}}">{{$key}}</a>
+        <a class="uk-button uk-button-success" href="/repos/{{$.Data.Repo.Owner.Login}}/{{$.Data.Repo.Name}}/commit/{{$.Data.Commit.SHA}}/run/{{$key}}">{{$key}}</a>
     {{end}}
 
 </div>

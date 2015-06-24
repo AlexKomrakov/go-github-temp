@@ -1,3 +1,28 @@
-<pre>
-    {{.Data.Commands}}
-</pre>
+<div class="uk-container uk-container-center uk-margin-top">
+
+    <a href="/repos/{{$.Data.Params.user}}/{{$.Data.Params.repo}}/commit/{{$.Data.Params.sha}}">{{$.Data.Params.sha}}</a>
+
+    <table class="uk-table">
+        <caption>Commands status</caption>
+        <thead>
+        <tr>
+            <th width="1">#</th>
+            <th>Type / command</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{ range $key, $value := .Data.Commands }}
+        <tr>
+            <td><strong>{{ $key }}</strong></td>
+            <td><strong>{{ $value.Type }}: {{ $value.Command }}</strong></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <pre>{{ if $value.Error }}<span class="uk-text-danger">{{$value.Error}}</span>{{ end }}{{ if $value.Success }}<span class="uk-text-success">{{$value.Success}}</span>{{ end }}</pre>
+            </td>
+        </tr>
+        {{ end }}
+        </tbody>
+    </table>
+
+</div>

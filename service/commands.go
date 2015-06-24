@@ -11,7 +11,7 @@ type CommandResponse struct {
 	Type    string
 	Command string
 	Error   error
-	Output  string
+	Success string
 }
 
 func RunCommands(config DeployScenario, client *github.Client, user, repo, sha string) (result []CommandResponse) {
@@ -20,11 +20,11 @@ func RunCommands(config DeployScenario, client *github.Client, user, repo, sha s
 		for commandType, actionStr := range command {
 			if commandType == "status" {
 				out, err := SetGitStatus(client, user, repo, sha, actionStr)
-				result = append(result, CommandResponse{Type: commandType, Command: actionStr, Output: out, Error: err})
+				result = append(result, CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: err})
 			}
 			if commandType == "ssh" {
 				out, err := ExecSshCommand(server, actionStr)
-				result = append(result, CommandResponse{Type: commandType, Command: actionStr, Output: out, Error: err})
+				result = append(result, CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: err})
 			}
 		}
 	}

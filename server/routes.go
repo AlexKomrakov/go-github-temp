@@ -25,11 +25,13 @@ func Router() (router *mux.Router) {
 	router.HandleFunc("/servers/{user}", AddServer).Methods("POST")
 	router.HandleFunc("/servers/{user}/delete", DeleteServer).Methods("POST")
 
+	router.HandleFunc("/hooks", GithubHookApi).Methods("POST")
+
+
 	//	router.HandleFunc("/repos", GetReposApi).Methods("GET")
 //	router.HandleFunc("/repos/{user}/{repo}/hook", SetHook).Methods("GET")
 //	router.HandleFunc("/repos/{user}/{repo}/{build}", BuildPage).Methods("GET")
 //	router.HandleFunc("/repos", PostReposApi).Methods("POST")
-//	router.HandleFunc("/hooks", GithubHookApi).Methods("POST")
 
 	return
 }

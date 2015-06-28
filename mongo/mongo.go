@@ -1,8 +1,6 @@
 package mongo
 
 import (
-//	"code.google.com/p/goauth2/oauth"
-//	"github.com/google/go-github/github"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"golang.org/x/crypto/ssh"

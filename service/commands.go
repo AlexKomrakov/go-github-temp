@@ -14,6 +14,33 @@ type CommandResponse struct {
 	Success string
 }
 
+func ProcessHook(event, body string) {
+	var user, repo, sha, branch string
+	switch event {
+	case "pull_request":
+		pullRequestEvent, _ := ParsePullRequestEvent(body)
+		user = *pullRequestEvent.Repo.Owner.Login
+		repo = *pullRequestEvent.Repo.Name
+		sha = *pullRequestEvent.PullRequest.Head.SHA
+	case "push":
+		pushEvent, _ := ParsePushEvent(body)
+		user = *pushEvent.Repo.Owner.Name
+		repo = *pushEvent.Repo.Name
+		sha = *pushEvent.After
+		branch = *pushEvent.Ref
+	default:
+		panic("Not supported event: " + event)
+	}
+	token := mongo.GetToken(user)
+	client := GetGithubClient(token)
+	file, _ := GetFileContent(client, user, repo, sha, GetServerConfig().Deploy)
+	deploy, _ := GetYamlConfig(file)
+
+	if deploy[event].Branch == nil || deploy[event].Branch == branch {
+		RunCommands(deploy[event], client, user, repo, sha)
+	}
+}
+
 func RunCommands(config DeployScenario, client *github.Client, user, repo, sha string) (result []CommandResponse) {
 	server := mongo.Server{User: user, User_host: config.Host}.Find()
 	for _, command := range config.Commands {

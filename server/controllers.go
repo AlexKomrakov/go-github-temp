@@ -194,6 +194,12 @@ func Logs(res http.ResponseWriter, req *http.Request) {
     Render(res, req, "logs", t)
 }
 
+func GithubHookApi(w http.ResponseWriter, req *http.Request) {
+    body := req.FormValue("payload")
+    event := req.Header["X-Github-Event"][0]
+    service.ProcessHook(event, body)
+}
+
 //func SetHook(res http.ResponseWriter, req *http.Request) {
 //	params := mux.Vars(req)
 //	result := setGithubHook(params["user"], params["repo"])

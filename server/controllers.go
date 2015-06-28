@@ -197,6 +197,7 @@ func Logs(res http.ResponseWriter, req *http.Request) {
 func GithubHookApi(w http.ResponseWriter, req *http.Request) {
     body := req.FormValue("payload")
     event := req.Header["X-Github-Event"][0]
+    l.Println(event)
     service.ProcessHook(event, body)
 }
 

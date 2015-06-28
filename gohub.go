@@ -8,7 +8,6 @@ import (
     "net/http"
     "github.com/alexkomrakov/gohub/service"
     "github.com/alexkomrakov/gohub/server"
-
     "github.com/goincremental/negroni-sessions"
     "github.com/goincremental/negroni-sessions/cookiestore"
 )

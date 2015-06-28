@@ -36,7 +36,7 @@ func ProcessHook(event, body string) {
 	file, _ := GetFileContent(client, user, repo, sha, GetServerConfig().Deploy)
 	deploy, _ := GetYamlConfig(file)
 
-	if deploy[event].Branch == nil || deploy[event].Branch == branch {
+	if deploy[event].Branch == "" || deploy[event].Branch == branch {
 		RunCommands(deploy[event], client, user, repo, sha)
 	}
 }

@@ -1,2 +1,4 @@
 .idea/
 *.log
+bin.exe
+gin-bin.exe

@@ -6,6 +6,7 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	"strings"
+	"time"
 )
 
 const (
@@ -20,6 +21,19 @@ const (
 type Repository struct {
 	User       string `json:"user"`
 	Repository string `json:"repository"`
+}
+
+type Commit struct {
+	Repository Repository `json:"repository"`
+	SHA        string     `json:"sha"`
+}
+
+type Build struct {
+	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Commit       Commit		   `json:"commit"`
+	Start_time   time.Time     `json:"start_time"`
+	End_time     time.Time     `json:"end_time"`
+	Success      bool          `json:"success"`
 }
 
 type Server struct {

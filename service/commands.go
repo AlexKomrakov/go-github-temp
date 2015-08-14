@@ -33,7 +33,7 @@ func ProcessHook(event, body string) {
 	}
 	token := mongo.GetToken(user)
 	client := GetGithubClient(token)
-	file, _ := GetFileContent(client, user, repo, sha, GetServerConfig().Deploy)
+	file, _ := GetFileContent(client, user, repo, sha, GetServerConfig().DeployFile)
 	deploy, _ := GetYamlConfig(file)
 
 	if deploy[event].Branch == "" || deploy[event].Branch == branch {

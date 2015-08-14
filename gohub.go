@@ -18,7 +18,7 @@ func main() {
 
     n := negroni.New(service.GetRecoveryLogger(config.Logs.Error), negroni.NewLogger(), negroni.NewStatic(http.Dir("public")))
 
-    store := cookiestore.New([]byte("secret123"))
+    store := cookiestore.New([]byte(config.SessionSecretKey))
     n.Use(sessions.Sessions("SESSION", store))
 
     n.UseHandler(router)

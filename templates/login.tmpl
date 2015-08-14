@@ -1,15 +1,16 @@
-<div class="uk-container uk-container-center uk-margin-top">
+<div class="uk-container uk-container-center uk-margin-top uk-text-center">
 
-    <h1>Login</h1>
+    <h1 class="uk-margin-large-top">Login</h1>
+
+    <a class="uk-button uk-button-success uk-button-large uk-margin-top" href="/login/github">
+        <i class="uk-icon-github uk-margin-small-right"></i>
+        Sign up
+    </a>
     <form class="uk-form uk-margin" action="/login" method="post">
-        <div class="uk-form-row">
-            <input class="uk-form-width-large" type="text" name="token" placeholder="Github token">
-        </div>
-        <div class="uk-form-row">
-            <button class="uk-button" type="submit">Войти</button>
+        <div class="uk-form-row uk-margin-top">
+            <input class="uk-form-width-large uk-form-small" type="text" name="token" placeholder="Github token">
+            <button class="uk-button uk-button-success uk-button-small" type="submit">Login</button>
         </div>
     </form>
-
-    Logged in with <a href="/login/github">GitHub</a>
 
 </div>

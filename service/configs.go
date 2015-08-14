@@ -3,6 +3,7 @@ package service
 import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+    "golang.org/x/oauth2"
 )
 
 const (
@@ -10,12 +11,15 @@ const (
 )
 
 type ServerConfig struct {
-	Adress string
-	Deploy string
+	Adress           string
+    DeployFile       string
+    SessionSecretKey string
     Logs   struct {
         Error string
         Gohub string
     }
+    Oauth            oauth2.Config
+    OauthStateString string
 }
 
 type DeployScenario struct {

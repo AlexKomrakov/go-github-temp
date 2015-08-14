@@ -22,23 +22,17 @@ import (
     githuboauth "golang.org/x/oauth2/github"
 )
 
-var r *render.Render
-var l *log.Logger
-var config service.ServerConfig
-
 var (
+    r *render.Render
+    l *log.Logger
+    config service.ServerConfig
+
     // You must register the app at https://github.com/settings/applications
     // Set callback to http://127.0.0.1:7000/github_oauth_cb
     // Set ClientId and ClientSecret to
-    oauthConf = &oauth2.Config{
-        ClientID:     "95516ec894645a4366f2",
-        ClientSecret: "fee08040cfd8aafba8c3ff6ca2b85a084cc836de",
-        // select level of access you want https://developer.github.com/v3/oauth/#scopes
-        Scopes:       []string{"user", "user:email", "repo", "repo:status", "read:repo_hook", "write:repo_hook", "admin:repo_hook"},
-        Endpoint:     githuboauth.Endpoint,
-    }
+    oauthConf oauth2.Config
     // random string for oauth2 API calls to protect against CSRF
-    oauthStateString = "thisshouldberandom"
+    oauthStateString string
 )
 
 type ViewData struct {
@@ -49,19 +43,33 @@ type ViewData struct {
 
 func Render(res http.ResponseWriter, req *http.Request, view string, data interface {}) {
     session := sessions.GetSession(req)
-    user  := session.Get("user")
+    user := session.Get("user")
 
     r.HTML(res, http.StatusOK, view, ViewData{User: user, Data: data})
 }
 
 func init() {
     config = service.GetServerConfig()
-	r = render.New(render.Options{Layout: "base"})
+	r = render.New(render.Options{
+        Layout: "base",
+        IsDevelopment: true,
+    })
     l = service.GetFileLogger(config.Logs.Gohub)
+
+    oauthConf = config.Oauth
+    oauthConf.Endpoint = githuboauth.Endpoint
+    oauthStateString = config.OauthStateString
 }
 
 func Index(res http.ResponseWriter, req *http.Request) {
-    Render(res, req, "index", nil)
+    session := sessions.GetSession(req)
+    user := session.Get("user")
+    if user == nil {
+        http.Redirect(res, req, "/login", http.StatusFound)
+    }
+    http.Redirect(res, req, "/repos/" + user.(string), http.StatusFound)
+
+    //    Render(res, req, "index", nil)
 }
 
 func UserRepos(res http.ResponseWriter, req *http.Request) {
@@ -127,7 +135,7 @@ func ShowCommit(res http.ResponseWriter, req *http.Request) {
     client := service.GetGithubClient(token)
     repo, _, _ := client.Repositories.Get(user, params["repo"])
     commit, _, _ := client.Repositories.GetCommit(user, params["repo"], params["sha"])
-    file, _ := service.GetFileContent(client, user, params["repo"], params["sha"], config.Deploy)
+    file, _ := service.GetFileContent(client, user, params["repo"], params["sha"], config.DeployFile)
     deploy, _ := service.GetYamlConfig(file)
 
     Render(res, req, "commit", map[string]interface{}{"Repo": repo, "Commit": commit, "File": string(file), "Deploy": deploy})
@@ -139,7 +147,7 @@ func RunScenario(res http.ResponseWriter, req *http.Request) {
     user := session.Get("user").(string)
     token := mongo.GetToken(user)
     client := service.GetGithubClient(token)
-    file, _ := service.GetFileContent(client, user, params["repo"], params["sha"], config.Deploy)
+    file, _ := service.GetFileContent(client, user, params["repo"], params["sha"], config.DeployFile)
     deploy, _ := service.GetYamlConfig(file)
     commands := service.RunCommands(deploy[params["scenario"]], client, user, params["repo"], params["sha"])
 

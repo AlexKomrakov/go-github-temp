@@ -17,11 +17,29 @@ import (
 
     "github.com/gorilla/schema"
     "strings"
+
+    "golang.org/x/oauth2"
+    githuboauth "golang.org/x/oauth2/github"
 )
 
 var r *render.Render
 var l *log.Logger
 var config service.ServerConfig
+
+var (
+    // You must register the app at https://github.com/settings/applications
+    // Set callback to http://127.0.0.1:7000/github_oauth_cb
+    // Set ClientId and ClientSecret to
+    oauthConf = &oauth2.Config{
+        ClientID:     "95516ec894645a4366f2",
+        ClientSecret: "fee08040cfd8aafba8c3ff6ca2b85a084cc836de",
+        // select level of access you want https://developer.github.com/v3/oauth/#scopes
+        Scopes:       []string{"user", "user:email", "repo", "repo:status", "read:repo_hook", "write:repo_hook", "admin:repo_hook"},
+        Endpoint:     githuboauth.Endpoint,
+    }
+    // random string for oauth2 API calls to protect against CSRF
+    oauthStateString = "thisshouldberandom"
+)
 
 type ViewData struct {
     User  interface{} `json:"user,omitempty"`
@@ -173,6 +191,12 @@ func Login(res http.ResponseWriter, req *http.Request) {
 
     client := service.GetGithubClient(token)
     user, _, _ := client.Users.Get("")
+    process_login(res, req, user, token)
+
+    Render(res, req, "login", nil)
+}
+
+func process_login(res http.ResponseWriter, req *http.Request, user *github.User, token string) {
     if user != nil {
         session := sessions.GetSession(req)
         session.Set("user", user.Login)
@@ -180,8 +204,6 @@ func Login(res http.ResponseWriter, req *http.Request) {
 
         http.Redirect(res, req, "/", http.StatusFound)
     }
-
-    Render(res, req, "login", nil)
 }
 
 func Logs(res http.ResponseWriter, req *http.Request) {
@@ -199,6 +221,40 @@ func GithubHookApi(w http.ResponseWriter, req *http.Request) {
     event := req.Header["X-Github-Event"][0]
     l.Println(event)
     service.ProcessHook(event, body)
+}
+
+func GithubLogin(w http.ResponseWriter, req *http.Request) {
+    url := oauthConf.AuthCodeURL(oauthStateString, oauth2.AccessTypeOnline)
+    http.Redirect(w, req, url, http.StatusTemporaryRedirect)
+}
+
+func GithubLoginCallback(w http.ResponseWriter, req *http.Request) {
+    state := req.FormValue("state")
+    if state != oauthStateString {
+        l.Printf("invalid oauth state, expected '%s', got '%s'\n", oauthStateString, state)
+        http.Redirect(w, req, "/", http.StatusTemporaryRedirect)
+        return
+    }
+
+    code := req.FormValue("code")
+    token, err := oauthConf.Exchange(oauth2.NoContext, code)
+    if err != nil {
+        l.Printf("oauthConf.Exchange() failed with '%s'\n", err)
+        http.Redirect(w, req, "/", http.StatusTemporaryRedirect)
+        return
+    }
+
+    oauthClient := oauthConf.Client(oauth2.NoContext, token)
+    client := github.NewClient(oauthClient)
+    user, _, err := client.Users.Get("")
+    if err != nil {
+        l.Printf("client.Users.Get() faled with '%s'\n", err)
+        http.Redirect(w, req, "/", http.StatusTemporaryRedirect)
+        return
+    }
+
+    process_login(w, req, user, token.AccessToken)
+    http.Redirect(w, req, "/login", http.StatusFound)
 }
 
 //func SetHook(res http.ResponseWriter, req *http.Request) {

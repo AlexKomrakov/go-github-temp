@@ -8,6 +8,9 @@ func Router() (router *mux.Router) {
 	router = mux.NewRouter()
 	router.HandleFunc("/", Index).Methods("GET")
 
+	router.HandleFunc("/login/github", GithubLogin).Methods("GET")
+	router.HandleFunc("/login/github/callback", GithubLogin).Methods("POST")
+
 	router.HandleFunc("/login", Login).Methods("GET", "POST")
 	router.HandleFunc("/logout", Logout).Methods("GET")
 
@@ -25,6 +28,7 @@ func Router() (router *mux.Router) {
 	router.HandleFunc("/servers/{user}", AddServer).Methods("POST")
 	router.HandleFunc("/servers/{user}/delete", DeleteServer).Methods("POST")
 
+	router.HandleFunc("/hooks", GithubHookApi).Methods("POST")
 	router.HandleFunc("/hooks", GithubHookApi).Methods("POST")
 
 

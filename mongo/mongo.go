@@ -164,7 +164,6 @@ func GetSshClient(user_host, password string) (client *ssh.Client, err error) {
 		User: user,
 		Auth: []ssh.AuthMethod{
 			ssh.Password(password),
-			//ssh.PublicKeys(key),
 		},
 	}
 	client, err = ssh.Dial("tcp", host, config)

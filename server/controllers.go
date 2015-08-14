@@ -20,8 +20,6 @@ import (
 
     "golang.org/x/oauth2"
     githuboauth "golang.org/x/oauth2/github"
-
-    "fmt"
 )
 
 var (
@@ -60,7 +58,6 @@ func init() {
 
     oauthConf = config.Oauth
     oauthConf.Endpoint = githuboauth.Endpoint
-    fmt.Println(config)
     oauthStateString = config.OauthStateString
 }
 

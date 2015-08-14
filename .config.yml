@@ -1,12 +1,12 @@
 adress: 0.0.0.0:9000
 deploy: .deploy.yml
-sessionSecretKey: kurf56ys
+sessionsecretkey: kurf56ys
 logs:
    error: error.log
    gohub: info.log
 oauth:
-  clientID: 95516ec894645a4366f2
-  clientSecret: fee08040cfd8aafba8c3ff6ca2b85a084cc836de
+  clientid: 95516ec894645a4366f2
+  clientsecret: fee08040cfd8aafba8c3ff6ca2b85a084cc836de
   scopes:
     - user
     - user:email
@@ -15,4 +15,4 @@ oauth:
     - read:repo_hook
     - write:repo_hook
     - admin:repo_hook
-oauthStateString: ikop2n3ddd4
+oauthstatestring: ikop2n3ddd4

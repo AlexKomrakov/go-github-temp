@@ -1,5 +1,5 @@
 adress: 0.0.0.0:9000
-deploy: .deploy.yml
+deployfile: .deploy.yml
 sessionsecretkey: kurf56ys
 logs:
    error: error.log

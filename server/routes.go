@@ -9,7 +9,7 @@ func Router() (router *mux.Router) {
 	router.HandleFunc("/", Index).Methods("GET")
 
 	router.HandleFunc("/login/github", GithubLogin).Methods("GET")
-	router.HandleFunc("/login/github/callback", GithubLogin).Methods("GET")
+	router.HandleFunc("/login/github/callback", GithubLoginCallback).Methods("GET")
 
 	router.HandleFunc("/login", Login).Methods("GET", "POST")
 	router.HandleFunc("/logout", Logout).Methods("GET")

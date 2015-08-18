@@ -31,6 +31,7 @@
             <th>Events</th>
             <th>Active</th>
             <th>Url</th>
+            <th>Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -48,9 +49,13 @@
             <td>
                 {{ $value.Config.url }}
             </td>
+            <td>
+                <a class="uk-button uk-button-danger" href="/repos/{{$.Data.Repo.Owner.Login}}/{{$.Data.Repo.Name}}/hook/{{ $value.ID }}/delete">Delete hook</a>
+            </td>
         </tr>
         {{ end }}
         </tbody>
     </table>
+    <a class="uk-button uk-button-success" href="/repos/{{$.Data.Repo.Owner.Login}}/{{$.Data.Repo.Name}}/hook">Add hook</a>
 
 </div>

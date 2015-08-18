@@ -16,3 +16,7 @@ oauth:
     - write:repo_hook
     - admin:repo_hook
 oauthstatestring: ikop2n3ddd4
+url: http://gohub.tk
+events:
+  - pull_request
+  - push

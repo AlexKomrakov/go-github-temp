@@ -17,6 +17,7 @@ import (
 
     "github.com/gorilla/schema"
     "strings"
+    "strconv"
 
     "golang.org/x/oauth2"
     githuboauth "golang.org/x/oauth2/github"
@@ -79,8 +80,24 @@ func UserRepos(res http.ResponseWriter, req *http.Request) {
     client := service.GetGithubClient(token)
     github_repos, _, _ := client.Repositories.List("", nil)
     gohub_repos := mongo.GetRepositories(user)
+    github_repos = filterRepos(github_repos, gohub_repos)
 
     Render(res, req, "repos", map[string]interface{}{"Github": github_repos, "Gohub": gohub_repos})
+}
+
+func filterRepos(github []github.Repository, database []mongo.Repository) (output []github.Repository) {
+    for _, value := range github {
+        found := false
+        for _, db_value := range database {
+            if (*value.Owner.Login == db_value.User && *value.Name == db_value.Repository) {
+                found = true
+            }
+        }
+        if (found == false) {
+            output = append(output, value)
+        }
+    }
+    return
 }
 
 func AddRepo(res http.ResponseWriter, req *http.Request) {
@@ -263,6 +280,34 @@ func GithubLoginCallback(w http.ResponseWriter, req *http.Request) {
 
     process_login(w, req, user, token.AccessToken)
     http.Redirect(w, req, "/login", http.StatusFound)
+}
+
+func SetHook(w http.ResponseWriter, req *http.Request) {
+    params := mux.Vars(req)
+    session := sessions.GetSession(req)
+    user := session.Get("user").(string)
+    token := mongo.GetToken(user)
+    client := service.GetGithubClient(token)
+
+    url  := config.Url + "/hooks"
+    hook := &github.Hook{Name: github.String("web"), Active: github.Bool(true), Events: config.Events, Config: map[string]interface {}{"url": url}}
+
+    client.Repositories.CreateHook(user, params["repo"], hook)
+
+    http.Redirect(w, req, "/repos/" + user + "/" + params["repo"], http.StatusTemporaryRedirect)
+}
+
+func DeleteHook(w http.ResponseWriter, req *http.Request) {
+    params := mux.Vars(req)
+    session := sessions.GetSession(req)
+    user := session.Get("user").(string)
+    token := mongo.GetToken(user)
+    client := service.GetGithubClient(token)
+
+    id, _ := strconv.Atoi(params["id"])
+    client.Repositories.DeleteHook(user, params["repo"], id)
+
+    http.Redirect(w, req, "/repos/" + user + "/" + params["repo"], http.StatusTemporaryRedirect)
 }
 
 //func SetHook(res http.ResponseWriter, req *http.Request) {

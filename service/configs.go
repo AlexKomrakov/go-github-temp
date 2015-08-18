@@ -20,6 +20,8 @@ type ServerConfig struct {
     }
     Oauth            oauth2.Config
     OauthStateString string
+    Url              string
+	Events           []string
 }
 
 type DeployScenario struct {

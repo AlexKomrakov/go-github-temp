@@ -69,8 +69,6 @@ func Index(res http.ResponseWriter, req *http.Request) {
         http.Redirect(res, req, "/login", http.StatusFound)
     }
     http.Redirect(res, req, "/repos/" + user.(string), http.StatusFound)
-
-    //    Render(res, req, "index", nil)
 }
 
 func UserRepos(res http.ResponseWriter, req *http.Request) {
@@ -79,50 +77,8 @@ func UserRepos(res http.ResponseWriter, req *http.Request) {
     token := mongo.GetToken(user)
     client := service.GetGithubClient(token)
     github_repos, _, _ := client.Repositories.List("", nil)
-    gohub_repos := mongo.GetRepositories(user)
-    github_repos = filterRepos(github_repos, gohub_repos)
 
-    Render(res, req, "repos", map[string]interface{}{"Github": github_repos, "Gohub": gohub_repos})
-}
-
-func filterRepos(github []github.Repository, database []mongo.Repository) (output []github.Repository) {
-    for _, value := range github {
-        found := false
-        for _, db_value := range database {
-            if (*value.Owner.Login == db_value.User && *value.Name == db_value.Repository) {
-                found = true
-            }
-        }
-        if (found == false) {
-            output = append(output, value)
-        }
-    }
-    return
-}
-
-func AddRepo(res http.ResponseWriter, req *http.Request) {
-    params := mux.Vars(req)
-
-    session := sessions.GetSession(req)
-    user := session.Get("user").(string)
-    token := mongo.GetToken(user)
-    client := service.GetGithubClient(token)
-    repo, _, _ := client.Repositories.Get(user, params["repo"])
-    if repo != nil {
-        mongo.Repository{User: *repo.Owner.Login, Repository: *repo.Name}.Store()
-        http.Redirect(res, req, "/repos/"+*repo.Owner.Login, http.StatusFound)
-    } else {
-        panic("Can't find repo")
-    }
-}
-
-func DeleteRepo(res http.ResponseWriter, req *http.Request) {
-    params := mux.Vars(req)
-    session := sessions.GetSession(req)
-    user := session.Get("user").(string)
-    mongo.Repository{User: user, Repository: params["repo"]}.Delete()
-
-    http.Redirect(res, req, "/repos/"+user, http.StatusFound)
+    Render(res, req, "repos", map[string]interface{}{"Github": github_repos})
 }
 
 func ShowRepo(res http.ResponseWriter, req *http.Request) {
@@ -131,9 +87,9 @@ func ShowRepo(res http.ResponseWriter, req *http.Request) {
     user := session.Get("user").(string)
     token := mongo.GetToken(user)
     client := service.GetGithubClient(token)
-    repo, _, _ := client.Repositories.Get(user, params["repo"])
-    hooks, _, _ := client.Repositories.ListHooks(user, params["repo"], &github.ListOptions{})
-    branches, _, _ := client.Git.ListRefs(user, params["repo"], &github.ReferenceListOptions{})
+    repo, _, _ := client.Repositories.Get(params["user"], params["repo"])
+    hooks, _, _ := client.Repositories.ListHooks(params["user"], params["repo"], &github.ListOptions{})
+    branches, _, _ := client.Git.ListRefs(params["user"], params["repo"], &github.ReferenceListOptions{})
     var filtered_branches []github.Reference
     for _, branch := range branches {
         if strings.HasPrefix(*branch.Ref, "refs/heads/") {
@@ -150,9 +106,9 @@ func ShowCommit(res http.ResponseWriter, req *http.Request) {
     user := session.Get("user").(string)
     token := mongo.GetToken(user)
     client := service.GetGithubClient(token)
-    repo, _, _ := client.Repositories.Get(user, params["repo"])
-    commit, _, _ := client.Repositories.GetCommit(user, params["repo"], params["sha"])
-    file, _ := service.GetFileContent(client, user, params["repo"], params["sha"], config.DeployFile)
+    repo, _, _ := client.Repositories.Get(params["user"], params["repo"])
+    commit, _, _ := client.Repositories.GetCommit(params["user"], params["repo"], params["sha"])
+    file, _ := service.GetFileContent(client, params["user"], params["repo"], params["sha"], config.DeployFile)
     deploy, _ := service.GetYamlConfig(file)
 
     Render(res, req, "commit", map[string]interface{}{"Repo": repo, "Commit": commit, "File": string(file), "Deploy": deploy})
@@ -164,9 +120,9 @@ func RunScenario(res http.ResponseWriter, req *http.Request) {
     user := session.Get("user").(string)
     token := mongo.GetToken(user)
     client := service.GetGithubClient(token)
-    file, _ := service.GetFileContent(client, user, params["repo"], params["sha"], config.DeployFile)
+    file, _ := service.GetFileContent(client, params["user"], params["repo"], params["sha"], config.DeployFile)
     deploy, _ := service.GetYamlConfig(file)
-    commands := service.RunCommands(deploy[params["scenario"]], client, user, params["repo"], params["sha"])
+    commands := service.RunCommands(deploy[params["scenario"]], client, params["user"], params["repo"], params["sha"])
 
     Render(res, req, "run", map[string]interface{}{"Params": params, "Commands": commands})
 }
@@ -292,9 +248,9 @@ func SetHook(w http.ResponseWriter, req *http.Request) {
     url  := config.Url + "/hooks"
     hook := &github.Hook{Name: github.String("web"), Active: github.Bool(true), Events: config.Events, Config: map[string]interface {}{"url": url}}
 
-    client.Repositories.CreateHook(user, params["repo"], hook)
+    client.Repositories.CreateHook(params["user"], params["repo"], hook)
 
-    http.Redirect(w, req, "/repos/" + user + "/" + params["repo"], http.StatusTemporaryRedirect)
+    http.Redirect(w, req, "/repos/" + params["user"] + "/" + params["repo"], http.StatusTemporaryRedirect)
 }
 
 func DeleteHook(w http.ResponseWriter, req *http.Request) {
@@ -305,7 +261,7 @@ func DeleteHook(w http.ResponseWriter, req *http.Request) {
     client := service.GetGithubClient(token)
 
     id, _ := strconv.Atoi(params["id"])
-    client.Repositories.DeleteHook(user, params["repo"], id)
+    client.Repositories.DeleteHook(params["user"], params["repo"], id)
 
     http.Redirect(w, req, "/repos/" + user + "/" + params["repo"], http.StatusTemporaryRedirect)
 }

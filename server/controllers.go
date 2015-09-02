@@ -88,6 +88,10 @@ func ShowRepo(res http.ResponseWriter, req *http.Request) {
     token := mongo.GetToken(user)
     client := service.GetGithubClient(token)
     repo, _, _ := client.Repositories.Get(params["user"], params["repo"])
+    _, err := mongo.RepositoryCredentials{params["user"], params["repo"]}.Find()
+    if err != nil {
+        mongo.Repository{Repository:*repo}.Store()
+    }
     hooks, _, _ := client.Repositories.ListHooks(params["user"], params["repo"], &github.ListOptions{})
     branches, _, _ := client.Git.ListRefs(params["user"], params["repo"], &github.ReferenceListOptions{})
     var filtered_branches []github.Reference

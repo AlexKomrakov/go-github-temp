@@ -7,6 +7,7 @@ import (
 
 	"strings"
 	"time"
+	"github.com/google/go-github/github"
 )
 
 const (
@@ -19,9 +20,39 @@ const (
 )
 
 type Repository struct {
-	User       string `json:"user"`
-	Repository string `json:"repository"`
+	github.Repository
+	Id bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 }
+
+type RepositoryCredentials struct {
+	Login string `json:"login"`
+	Name  string `json:"name"`
+}
+
+func (r Repository) Store() {
+	err := getDb().C(repos_collection).Insert(&r)
+	if err != nil {
+		panic(err)
+	}
+}
+
+//func (r Repository) Delete() {
+//	err := getDb().C(repos_collection).Remove(r)
+//	if err != nil {
+//		panic(err)
+//	}
+//}
+
+func FindRepository(q interface{}) (repo Repository, err error) {
+	err = getDb().C(repos_collection).Find(q).One(&repo)
+
+	return
+}
+
+func (r RepositoryCredentials) Find() (repo Repository, err error) {
+	return FindRepository(bson.M{"repository.name": r.Name, "repository.owner.login": r.Login})
+}
+
 
 type Commit struct {
 	Repository Repository `json:"repository"`
@@ -111,29 +142,6 @@ func (s Server) Check() bool {
 
 func (s Server) Client() (client *ssh.Client, err error) {
 	return GetSshClient(s.User_host, s.Password)
-}
-
-func (r Repository) Store() {
-	err := getDb().C(repos_collection).Insert(&r)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (r Repository) Delete() {
-	err := getDb().C(repos_collection).Remove(r)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (r Repository) Find() (repo Repository) {
-	err := getDb().C(repos_collection).Find(r).One(&repo)
-	if err != nil {
-		panic(err)
-	}
-
-	return
 }
 
 func (t Token) Store() {

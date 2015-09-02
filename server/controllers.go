@@ -88,10 +88,12 @@ func ShowRepo(res http.ResponseWriter, req *http.Request) {
     token := mongo.GetToken(user)
     client := service.GetGithubClient(token)
     repo, _, _ := client.Repositories.Get(params["user"], params["repo"])
-    _, err := mongo.RepositoryCredentials{params["user"], params["repo"]}.Find()
+    repo_cred := mongo.RepositoryCredentials{params["user"], params["repo"]}
+    _, err := repo_cred.GetRepository()
     if err != nil {
         mongo.Repository{Repository:*repo}.Store()
     }
+    builds, _ := repo_cred.GetBuilds()
     hooks, _, _ := client.Repositories.ListHooks(params["user"], params["repo"], &github.ListOptions{})
     branches, _, _ := client.Git.ListRefs(params["user"], params["repo"], &github.ReferenceListOptions{})
     var filtered_branches []github.Reference
@@ -101,7 +103,7 @@ func ShowRepo(res http.ResponseWriter, req *http.Request) {
         }
     }
 
-    Render(res, req, "repo", map[string]interface{}{"Repo": repo, "Hooks": hooks, "Branches": filtered_branches})
+    Render(res, req, "repo", map[string]interface{}{"Repo": repo, "Hooks": hooks, "Branches": filtered_branches, "Builds": builds})
 }
 
 func ShowCommit(res http.ResponseWriter, req *http.Request) {
@@ -126,7 +128,7 @@ func RunScenario(res http.ResponseWriter, req *http.Request) {
     client := service.GetGithubClient(token)
     file, _ := service.GetFileContent(client, params["user"], params["repo"], params["sha"], config.DeployFile)
     deploy, _ := service.GetYamlConfig(file)
-    commands := service.RunCommands(deploy[params["scenario"]], client, params["user"], params["repo"], params["sha"])
+    commands := service.RunCommands(deploy, client, params["scenario"], mongo.CommitCredentials{mongo.RepositoryCredentials{params["user"], params["repo"]}, params["sha"]})
 
     Render(res, req, "run", map[string]interface{}{"Params": params, "Commands": commands})
 }

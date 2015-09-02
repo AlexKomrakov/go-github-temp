@@ -19,6 +19,12 @@ const (
 	tokens_collection  = "tokens"
 )
 
+type DeployScenario struct {
+	Branch string
+	Host   string
+	Commands []map[string]string
+}
+
 type Repository struct {
 	github.Repository
 	Id bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
@@ -27,6 +33,18 @@ type Repository struct {
 type RepositoryCredentials struct {
 	Login string `json:"login"`
 	Name  string `json:"name"`
+}
+func (r RepositoryCredentials) GetRepository() (repo Repository, err error) {
+	return FindRepository(bson.M{"repository.name": r.Name, "repository.owner.login": r.Login})
+}
+func (r RepositoryCredentials) GetBuilds() (builds []Build, err error) {
+	err = getDb().C(builds_collection).Find(bson.M{"commitcredentials.repositorycredentials.login": r.Login, "commitcredentials.repositorycredentials.name": r.Name}).All(&builds)
+	return
+}
+
+type CommitCredentials struct {
+	RepositoryCredentials
+	SHA string `json:"sha"`
 }
 
 func (r Repository) Store() {
@@ -49,22 +67,27 @@ func FindRepository(q interface{}) (repo Repository, err error) {
 	return
 }
 
-func (r RepositoryCredentials) Find() (repo Repository, err error) {
-	return FindRepository(bson.M{"repository.name": r.Name, "repository.owner.login": r.Login})
-}
 
-
-type Commit struct {
-	Repository Repository `json:"repository"`
-	SHA        string     `json:"sha"`
-}
 
 type Build struct {
-	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Commit       Commit		   `json:"commit"`
-	Start_time   time.Time     `json:"start_time"`
-	End_time     time.Time     `json:"end_time"`
-	Success      bool          `json:"success"`
+	CommitCredentials
+	Id               bson.ObjectId 			   `bson:"_id,omitempty" json:"id"`
+	DeployFile       map[string]DeployScenario `json:"deployScenario"`
+	Event            string 				   `json:"event"`
+	Created_at       time.Time 				   `json:"created_at"`
+	CommandResponses []CommandResponse		   `json:"commandResponses"`
+}
+func (b Build) Store() (err error) {
+	b.Created_at = time.Now()
+
+	return getDb().C(builds_collection).Insert(&b)
+}
+
+type CommandResponse struct {
+	Type    string
+	Command string
+	Error   error
+	Success string
 }
 
 type Server struct {

@@ -7,13 +7,6 @@ import (
 	"github.com/alexkomrakov/gohub/mongo"
 )
 
-type CommandResponse struct {
-	Type    string
-	Command string
-	Error   error
-	Success string
-}
-
 func ProcessHook(event, body string) {
 	var user, repo, sha, branch string
 	switch event {
@@ -37,21 +30,23 @@ func ProcessHook(event, body string) {
 	deploy, _ := GetYamlConfig(file)
 
 	if deploy[event].Branch == "" || deploy[event].Branch == branch {
-		RunCommands(deploy[event], client, user, repo, sha)
+		RunCommands(deploy, client, event, mongo.CommitCredentials{mongo.RepositoryCredentials{user, repo}, sha})
 	}
 }
 
-func RunCommands(config DeployScenario, client *github.Client, user, repo, sha string) (result []CommandResponse) {
-	server := mongo.Server{User: user, User_host: config.Host}.Find()
+func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, event string, commit_credentials mongo.CommitCredentials) (result []mongo.CommandResponse) {
+	mongo.Build{CommitCredentials: commit_credentials, DeployFile: deploy, Event: event}.Store()
+	config := deploy[event]
+	server := mongo.Server{User: commit_credentials.Login, User_host: config.Host}.Find()
 	for _, command := range config.Commands {
 		for commandType, actionStr := range command {
 			if commandType == "status" {
-				out, err := SetGitStatus(client, user, repo, sha, actionStr)
-				result = append(result, CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: err})
+				out, err := SetGitStatus(client, commit_credentials.Login, commit_credentials.Name, commit_credentials.SHA, actionStr)
+				result = append(result, mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: err})
 			}
 			if commandType == "ssh" {
 				out, err := ExecSshCommand(server, actionStr)
-				result = append(result, CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: err})
+				result = append(result, mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: err})
 			}
 		}
 	}

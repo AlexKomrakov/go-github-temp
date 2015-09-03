@@ -1,0 +1,28 @@
+<div class="uk-container uk-container-center uk-margin-top">
+
+    <h1>{{.Data.Build.Event}}</h1>
+    <a href="/repos/{{.Data.Build.Login}}/{{.Data.Build.Name}}/commit/{{.Data.Build.SHA}}">{{.Data.Build.SHA}}</a>
+    <table class="uk-table">
+        <caption>Commands status</caption>
+        <thead>
+        <tr>
+            <th width="1">#</th>
+            <th>Type / command</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{ range $key, $value := .Data.Build.CommandResponses }}
+        <tr>
+            <td><strong>{{ $key }}</strong></td>
+            <td><strong>{{ $value.Type }}: {{ $value.Command }}</strong></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <pre>{{ if $value.Error }}<span class="uk-text-danger">{{$value.Error}}</span>{{ end }}{{ if $value.Success }}<span class="uk-text-success">{{$value.Success}}</span>{{ end }}</pre>
+            </td>
+        </tr>
+        {{ end }}
+        </tbody>
+    </table>
+
+</div>

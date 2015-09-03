@@ -2,7 +2,7 @@
 
     <img class="uk-border-circle" width="120" height="120" src="{{.Data.Repo.Owner.AvatarURL}}" alt="">
 
-    <h3><a href="{{.Data.Repo.HTMLURL}}">{{.Data.Repo.FullName}}</a></h3>
+    <h3><a href="/repos/{{$.Data.Repo.Owner.Login}}/{{$.Data.Repo.Name}}">{{.Data.Repo.FullName}}</a></h3>
 
     <div>
         {{.Data.Commit.SHA}}

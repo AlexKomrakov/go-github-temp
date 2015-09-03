@@ -106,6 +106,13 @@ func ShowRepo(res http.ResponseWriter, req *http.Request) {
     Render(res, req, "repo", map[string]interface{}{"Repo": repo, "Hooks": hooks, "Branches": filtered_branches, "Builds": builds})
 }
 
+func ShowBuild(res http.ResponseWriter, req *http.Request) {
+    params := mux.Vars(req)
+    build, _ := mongo.FindBuildById(params["id"])
+
+    Render(res, req, "build", map[string]interface{}{"Params": params, "Build": build})
+}
+
 func ShowCommit(res http.ResponseWriter, req *http.Request) {
     params := mux.Vars(req)
     session := sessions.GetSession(req)
@@ -128,9 +135,9 @@ func RunScenario(res http.ResponseWriter, req *http.Request) {
     client := service.GetGithubClient(token)
     file, _ := service.GetFileContent(client, params["user"], params["repo"], params["sha"], config.DeployFile)
     deploy, _ := service.GetYamlConfig(file)
-    commands := service.RunCommands(deploy, client, params["scenario"], mongo.CommitCredentials{mongo.RepositoryCredentials{params["user"], params["repo"]}, params["sha"]})
+    build := service.RunCommands(deploy, client, params["scenario"], mongo.CommitCredentials{mongo.RepositoryCredentials{params["user"], params["repo"]}, params["sha"]})
 
-    Render(res, req, "run", map[string]interface{}{"Params": params, "Commands": commands})
+    http.Redirect(res, req, "/repos/"+params["user"]+"/"+params["repo"]+"/build/"+build.Id.Hex(), http.StatusFound)
 }
 
 func UserServers(res http.ResponseWriter, req *http.Request) {

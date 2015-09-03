@@ -38,7 +38,7 @@ func (r RepositoryCredentials) GetRepository() (repo Repository, err error) {
 	return FindRepository(bson.M{"repository.name": r.Name, "repository.owner.login": r.Login})
 }
 func (r RepositoryCredentials) GetBuilds() (builds []Build, err error) {
-	err = getDb().C(builds_collection).Find(bson.M{"commitcredentials.repositorycredentials.login": r.Login, "commitcredentials.repositorycredentials.name": r.Name}).All(&builds)
+	err = getDb().C(builds_collection).Find(bson.M{"commitcredentials.repositorycredentials.login": r.Login, "commitcredentials.repositorycredentials.name": r.Name}).Sort("-_id").All(&builds)
 	return
 }
 
@@ -75,19 +75,39 @@ type Build struct {
 	DeployFile       map[string]DeployScenario `json:"deployScenario"`
 	Event            string 				   `json:"event"`
 	Created_at       time.Time 				   `json:"created_at"`
-	CommandResponses []CommandResponse		   `json:"commandResponses"`
+	CommandResponses []CommandResponse		   `bson:"commandresponses,omitempty" json:"commandResponses"`
 }
-func (b Build) Store() (err error) {
+func FindBuildById(id interface {}) (b Build, err error) {
+	err = getDb().C(builds_collection).Find(bson.M{"_id": bson.ObjectIdHex(id.(string))}).One(&b)
+
+	return
+}
+func (b Build) HasError() bool {
+	for _, val := range b.CommandResponses {
+		if val.Error != "" {
+			return true
+		}
+	}
+
+	return false
+}
+func (b *Build) Store() (err error) {
 	b.Created_at = time.Now()
+	b.Id = bson.NewObjectId()
 
 	return getDb().C(builds_collection).Insert(&b)
 }
+func (b *Build) AddCommand(c CommandResponse) (err error) {
+	b.CommandResponses = append(b.CommandResponses, c)
+
+	return getDb().C(builds_collection).Update(bson.M{"_id": b.Id}, bson.M{"$set": bson.M{"commandresponses": b.CommandResponses}})
+}
 
 type CommandResponse struct {
-	Type    string
-	Command string
-	Error   error
-	Success string
+	Type    string  `bson:"type,omitempty"`
+	Command string  `bson:"command,omitempty"`
+	Error   string  `bson:"error,omitempty"`
+	Success string  `bson:"success,omitempty"`
 }
 
 type Server struct {

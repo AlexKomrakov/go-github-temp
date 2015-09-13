@@ -9,7 +9,7 @@ import (
 )
 
 func ProcessHook(event, body string) {
-	var params map[string]string
+	params := make(map[string]string)
 
 	switch event {
 	case "pull_request":

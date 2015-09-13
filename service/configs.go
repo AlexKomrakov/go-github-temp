@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	config_file = ".config.yml"
+	config_file = "config.yml"
 )
 
 type ServerConfig struct {
@@ -24,8 +24,6 @@ type ServerConfig struct {
     Url              string
 	Events           []string
 }
-
-
 
 func GetServerConfig() (config ServerConfig) {
 	b, err := ioutil.ReadFile(config_file)

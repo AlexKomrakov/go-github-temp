@@ -2,8 +2,8 @@ adress: 0.0.0.0:9000
 deployfile: .deploy.yml
 sessionsecretkey: kurf56ys
 logs:
-   error: error.log
-   gohub: info.log
+  error: error.log
+  gohub: info.log
 oauth:
   clientid: 95516ec894645a4366f2
   clientsecret: fee08040cfd8aafba8c3ff6ca2b85a084cc836de

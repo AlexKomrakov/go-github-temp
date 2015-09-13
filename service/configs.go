@@ -4,10 +4,11 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
     "golang.org/x/oauth2"
+	"github.com/alexkomrakov/gohub/mongo"
 )
 
 const (
-	config_file = ".config.yml"
+	config_file = "config.yml"
 )
 
 type ServerConfig struct {
@@ -24,12 +25,6 @@ type ServerConfig struct {
 	Events           []string
 }
 
-type DeployScenario struct {
-	Branch string
-	Host   string
-	Commands []map[string]string
-}
-
 func GetServerConfig() (config ServerConfig) {
 	b, err := ioutil.ReadFile(config_file)
 	if err != nil {
@@ -44,7 +39,7 @@ func GetServerConfig() (config ServerConfig) {
 	return
 }
 
-func GetYamlConfig(file []byte) (config map[string]DeployScenario, err error) {
+func GetYamlConfig(file []byte) (config map[string]mongo.DeployScenario, err error) {
 	err = yaml.Unmarshal(file, &config)
 	return
 }

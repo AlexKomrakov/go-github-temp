@@ -58,4 +58,36 @@
     </table>
     <a class="uk-button uk-button-success" href="/repos/{{$.Data.Repo.Owner.Login}}/{{$.Data.Repo.Name}}/hook">Add hook</a>
 
+    <table class="uk-table uk-margin-large-top">
+        <caption>Builds</caption>
+        <thead>
+        <tr>
+            <th width="30%">Created at</th>
+            <th>SHA</th>
+            <th>Event</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{ range $key, $value := .Data.Builds }}
+        <tr>
+            <td>
+                <a href="/repos/{{$.Data.Repo.Owner.Login}}/{{$.Data.Repo.Name}}/build/{{$value.Id.Hex}}">
+                    {{ $value.Created_at }}
+                </a>
+            </td>
+            <td>{{ $value.SHA }}</td>
+            <td>{{ $value.Event }}</td>
+            <td>
+                {{ if $value.HasError }}
+                <span class="uk-badge uk-badge-danger">Error</span>
+                {{else}}
+                <span class="uk-badge uk-badge-success">Ok</span>
+                {{end}}
+            </td>
+        </tr>
+        {{ end }}
+        </tbody>
+    </table>
+
 </div>

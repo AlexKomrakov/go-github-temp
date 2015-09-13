@@ -7,6 +7,7 @@ import (
 
 	"strings"
 	"time"
+	"github.com/google/go-github/github"
 )
 
 const (
@@ -18,22 +19,95 @@ const (
 	tokens_collection  = "tokens"
 )
 
-type Repository struct {
-	User       string `json:"user"`
-	Repository string `json:"repository"`
+type DeployScenario struct {
+	Branch string
+	Host   string
+	Commands []map[string]string
 }
 
-type Commit struct {
-	Repository Repository `json:"repository"`
-	SHA        string     `json:"sha"`
+type Repository struct {
+	github.Repository
+	Id bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 }
+
+type RepositoryCredentials struct {
+	Login string `json:"login"`
+	Name  string `json:"name"`
+}
+func (r RepositoryCredentials) GetRepository() (repo Repository, err error) {
+	return FindRepository(bson.M{"repository.name": r.Name, "repository.owner.login": r.Login})
+}
+func (r RepositoryCredentials) GetBuilds() (builds []Build, err error) {
+	err = getDb().C(builds_collection).Find(bson.M{"commitcredentials.repositorycredentials.login": r.Login, "commitcredentials.repositorycredentials.name": r.Name}).Sort("-_id").All(&builds)
+	return
+}
+
+type CommitCredentials struct {
+	RepositoryCredentials
+	SHA string `json:"sha"`
+}
+
+func (r Repository) Store() {
+	err := getDb().C(repos_collection).Insert(&r)
+	if err != nil {
+		panic(err)
+	}
+}
+
+//func (r Repository) Delete() {
+//	err := getDb().C(repos_collection).Remove(r)
+//	if err != nil {
+//		panic(err)
+//	}
+//}
+
+func FindRepository(q interface{}) (repo Repository, err error) {
+	err = getDb().C(repos_collection).Find(q).One(&repo)
+
+	return
+}
+
+
 
 type Build struct {
-	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Commit       Commit		   `json:"commit"`
-	Start_time   time.Time     `json:"start_time"`
-	End_time     time.Time     `json:"end_time"`
-	Success      bool          `json:"success"`
+	CommitCredentials
+	Id               bson.ObjectId 			   `bson:"_id,omitempty" json:"id"`
+	DeployFile       map[string]DeployScenario `json:"deployScenario"`
+	Event            string 				   `json:"event"`
+	Created_at       time.Time 				   `json:"created_at"`
+	CommandResponses []CommandResponse		   `bson:"commandresponses,omitempty" json:"commandResponses"`
+}
+func FindBuildById(id interface {}) (b Build, err error) {
+	err = getDb().C(builds_collection).Find(bson.M{"_id": bson.ObjectIdHex(id.(string))}).One(&b)
+
+	return
+}
+func (b Build) HasError() bool {
+	for _, val := range b.CommandResponses {
+		if val.Error != "" {
+			return true
+		}
+	}
+
+	return false
+}
+func (b *Build) Store() (err error) {
+	b.Created_at = time.Now()
+	b.Id = bson.NewObjectId()
+
+	return getDb().C(builds_collection).Insert(&b)
+}
+func (b *Build) AddCommand(c CommandResponse) (err error) {
+	b.CommandResponses = append(b.CommandResponses, c)
+
+	return getDb().C(builds_collection).Update(bson.M{"_id": b.Id}, bson.M{"$set": bson.M{"commandresponses": b.CommandResponses}})
+}
+
+type CommandResponse struct {
+	Type    string  `bson:"type,omitempty"`
+	Command string  `bson:"command,omitempty"`
+	Error   string  `bson:"error,omitempty"`
+	Success string  `bson:"success,omitempty"`
 }
 
 type Server struct {
@@ -111,29 +185,6 @@ func (s Server) Check() bool {
 
 func (s Server) Client() (client *ssh.Client, err error) {
 	return GetSshClient(s.User_host, s.Password)
-}
-
-func (r Repository) Store() {
-	err := getDb().C(repos_collection).Insert(&r)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (r Repository) Delete() {
-	err := getDb().C(repos_collection).Remove(r)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (r Repository) Find() (repo Repository) {
-	err := getDb().C(repos_collection).Find(r).One(&repo)
-	if err != nil {
-		panic(err)
-	}
-
-	return
 }
 
 func (t Token) Store() {

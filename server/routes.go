@@ -18,10 +18,9 @@ func Router() (router *mux.Router) {
 
 	router.HandleFunc("/repos/{user}", UserRepos).Methods("GET")
 	router.HandleFunc("/repos/{user}/{repo}", ShowRepo).Methods("GET")
-	router.HandleFunc("/repos/{user}/{repo}/add", AddRepo).Methods("GET")
-	router.HandleFunc("/repos/{user}/{repo}/delete", DeleteRepo).Methods("GET")
 	router.HandleFunc("/repos/{user}/{repo}/hook", SetHook).Methods("GET")
 	router.HandleFunc("/repos/{user}/{repo}/hook/{id}/delete", DeleteHook).Methods("GET")
+	router.HandleFunc("/repos/{user}/{repo}/build/{id}", ShowBuild).Methods("GET")
 	router.HandleFunc("/repos/{user}/{repo}/commit/{sha}", ShowCommit).Methods("GET")
 	router.HandleFunc("/repos/{user}/{repo}/commit/{sha}/run/{scenario}", RunScenario).Methods("GET")
 

@@ -3,55 +3,66 @@ package service
 import (
 	"errors"
 	"bytes"
+	"strings"
 	"github.com/google/go-github/github"
 	"github.com/alexkomrakov/gohub/mongo"
 )
 
-type CommandResponse struct {
-	Type    string
-	Command string
-	Error   error
-	Success string
-}
-
 func ProcessHook(event, body string) {
-	var user, repo, sha, branch string
+	var params map[string]string
+
 	switch event {
 	case "pull_request":
 		pullRequestEvent, _ := ParsePullRequestEvent(body)
-		user = *pullRequestEvent.Repo.Owner.Login
-		repo = *pullRequestEvent.Repo.Name
-		sha = *pullRequestEvent.PullRequest.Head.SHA
+		params["user"]   = *pullRequestEvent.Repo.Owner.Login
+		params["repo"]   = *pullRequestEvent.Repo.Name
+		params["sha"]    = *pullRequestEvent.PullRequest.Head.SHA
+		params["branch"] = *pullRequestEvent.PullRequest.Head.Ref
 	case "push":
 		pushEvent, _ := ParsePushEvent(body)
-		user = *pushEvent.Repo.Owner.Name
-		repo = *pushEvent.Repo.Name
-		sha = *pushEvent.After
-		branch = *pushEvent.Ref
+		params["user"]   = *pushEvent.Repo.Owner.Name
+		params["repo"]   = *pushEvent.Repo.Name
+		params["sha"]    = *pushEvent.After
+		params["branch"] = *pushEvent.Ref
 	default:
 		panic("Not supported event: " + event)
 	}
-	token := mongo.GetToken(user)
+	body = ReplaceVariables(params, body)
+
+	token := mongo.GetToken(params["user"])
 	client := GetGithubClient(token)
-	file, _ := GetFileContent(client, user, repo, sha, GetServerConfig().DeployFile)
+	file, _ := GetFileContent(client, params["user"], params["repo"], params["sha"], GetServerConfig().DeployFile)
 	deploy, _ := GetYamlConfig(file)
 
-	if deploy[event].Branch == "" || deploy[event].Branch == branch {
-		RunCommands(deploy[event], client, user, repo, sha)
+	if deploy[event].Branch == "" || deploy[event].Branch == params["branch"] {
+		RunCommands(deploy, client, event, mongo.CommitCredentials{mongo.RepositoryCredentials{params["user"], params["repo"]}, params["sha"]})
 	}
 }
 
-func RunCommands(config DeployScenario, client *github.Client, user, repo, sha string) (result []CommandResponse) {
-	server := mongo.Server{User: user, User_host: config.Host}.Find()
+func ReplaceVariables(params map[string]string, text string) string {
+	for variable, value := range params {
+		r := strings.NewReplacer("{{" + variable + "}}", value)
+		text = r.Replace(text)
+	}
+
+	return text
+}
+
+func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, event string, commit_credentials mongo.CommitCredentials) (build mongo.Build) {
+	build = mongo.Build{CommitCredentials: commit_credentials, DeployFile: deploy, Event: event}
+	build.Store()
+
+	config := deploy[event]
+	server := mongo.Server{User: commit_credentials.Login, User_host: config.Host}.Find()
 	for _, command := range config.Commands {
 		for commandType, actionStr := range command {
 			if commandType == "status" {
-				out, err := SetGitStatus(client, user, repo, sha, actionStr)
-				result = append(result, CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: err})
+				out, err := SetGitStatus(client, commit_credentials.Login, commit_credentials.Name, commit_credentials.SHA, actionStr)
+				build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: err.Error()})
 			}
 			if commandType == "ssh" {
 				out, err := ExecSshCommand(server, actionStr)
-				result = append(result, CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: err})
+				build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: err.Error()})
 			}
 		}
 	}

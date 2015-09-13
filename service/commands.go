@@ -14,9 +14,10 @@ func ProcessHook(event, body string) {
 	switch event {
 	case "pull_request":
 		pullRequestEvent, _ := ParsePullRequestEvent(body)
-		params["user"] = *pullRequestEvent.Repo.Owner.Login
-		params["repo"] = *pullRequestEvent.Repo.Name
-		params["sha"]  = *pullRequestEvent.PullRequest.Head.SHA
+		params["user"]   = *pullRequestEvent.Repo.Owner.Login
+		params["repo"]   = *pullRequestEvent.Repo.Name
+		params["sha"]    = *pullRequestEvent.PullRequest.Head.SHA
+		params["branch"] = *pullRequestEvent.PullRequest.Head.Ref
 	case "push":
 		pushEvent, _ := ParsePushEvent(body)
 		params["user"]   = *pushEvent.Repo.Owner.Name

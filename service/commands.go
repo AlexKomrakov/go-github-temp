@@ -55,9 +55,9 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
 	config := deploy[event]
 	server := mongo.Server{User: commit_credentials.Login, User_host: config.Host}.Find()
     has_error := false
-	for _, command := range config.Commands {
+    error := ""
+    for _, command := range config.Commands {
 		for commandType, actionStr := range command {
-            error := ""
 			if commandType == "status" {
 				out, err := SetGitStatus(client, commit_credentials.Login, commit_credentials.Name, commit_credentials.SHA, actionStr)
                 if err != nil {

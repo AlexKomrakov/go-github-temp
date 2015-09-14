@@ -6,7 +6,6 @@ import (
 	"strings"
 	"github.com/google/go-github/github"
 	"github.com/alexkomrakov/gohub/mongo"
-    "fmt"
 )
 
 func ProcessHook(event, body string) {

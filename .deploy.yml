@@ -7,7 +7,7 @@ pull_request:
     - ssh: ls
     - ssh: wheris {{sha}}
     - status: success
-  onError:
+  error:
     - status: error
 push:
    branch: refs/heads/master

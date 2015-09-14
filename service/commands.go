@@ -81,7 +81,7 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
     // TODO Refactor this shit
     fmt.Println(has_error)
     if has_error == true {
-        fmt.Println(config.OnError)
+        fmt.Println(config)
 
         for _, command := range config.OnError {
             fmt.Println(command)

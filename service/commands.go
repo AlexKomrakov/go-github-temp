@@ -58,6 +58,7 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
     error := ""
     for _, command := range config.Commands {
 		for commandType, actionStr := range command {
+            error = ""
 			if commandType == "status" {
 				out, err := SetGitStatus(client, commit_credentials.Login, commit_credentials.Name, commit_credentials.SHA, actionStr)
                 if err != nil {
@@ -80,6 +81,7 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
     if has_error == true {
         for _, command := range config.OnError {
             for commandType, actionStr := range command {
+                error = ""
                 if commandType == "status" {
                     out, err := SetGitStatus(client, commit_credentials.Login, commit_credentials.Name, commit_credentials.SHA, actionStr)
                     if err != nil {

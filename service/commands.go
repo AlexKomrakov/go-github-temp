@@ -6,6 +6,7 @@ import (
 	"strings"
 	"github.com/google/go-github/github"
 	"github.com/alexkomrakov/gohub/mongo"
+    "fmt"
 )
 
 func ProcessHook(event, body string) {
@@ -78,6 +79,7 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
 		}
 	}
     // TODO Refactor this shit
+    fmt.Println(has_error)
     if has_error == true {
         for _, command := range config.OnError {
             for commandType, actionStr := range command {

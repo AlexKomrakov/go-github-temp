@@ -263,7 +263,10 @@ func SetHook(w http.ResponseWriter, req *http.Request) {
     url  := config.Url + "/hooks"
     hook := &github.Hook{Name: github.String("web"), Active: github.Bool(true), Events: config.Events, Config: map[string]interface {}{"url": url}}
 
-    client.Repositories.CreateHook(params["user"], params["repo"], hook)
+    _, _, err := client.Repositories.CreateHook(params["user"], params["repo"], hook)
+    if err != nil {
+        panic(err)
+    }
 
     http.Redirect(w, req, "/repos/" + params["user"] + "/" + params["repo"], http.StatusTemporaryRedirect)
 }

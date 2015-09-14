@@ -57,17 +57,15 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
 	server := mongo.Server{User: commit_credentials.Login, User_host: config.Host}.Find()
 	for _, command := range config.Commands {
 		for commandType, actionStr := range command {
+            error := ""
 			if commandType == "status" {
 				out, err := SetGitStatus(client, commit_credentials.Login, commit_credentials.Name, commit_credentials.SHA, actionStr)
-                fmt.Println(err.Error())
-                fmt.Println(out)
-                fmt.Println(err)
-                fmt.Println(commandType)
-                fmt.Println(actionStr)
-				build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: err.Error()})
+                if err != nil {  error = err.Error() }
+				build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
 			}
 			if commandType == "ssh" {
 				out, err := ExecSshCommand(server, actionStr)
+                if err != nil {  error = err.Error() }
 				build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: err.Error()})
 			}
 		}

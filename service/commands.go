@@ -6,7 +6,6 @@ import (
 	"strings"
 	"github.com/google/go-github/github"
 	"github.com/alexkomrakov/gohub/mongo"
-    "fmt"
 )
 
 func ProcessHook(event, body string) {
@@ -83,12 +82,8 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
 	}
     // TODO Refactor this shit
     if has_error == true {
-        fmt.Println(config)
-
         for _, command := range config.Error {
-            fmt.Println(command)
             for commandType, actionStr := range command {
-                fmt.Println(actionStr)
                 error = ""
                 if commandType == "status" {
                     out, err := SetGitStatus(client, commit_credentials.Login, commit_credentials.Name, commit_credentials.SHA, actionStr)

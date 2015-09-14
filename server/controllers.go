@@ -134,7 +134,8 @@ func RunScenario(res http.ResponseWriter, req *http.Request) {
     token := mongo.GetToken(user)
     client := service.GetGithubClient(token)
     file, _ := service.GetFileContent(client, params["user"], params["repo"], params["sha"], config.DeployFile)
-    deploy, _ := service.GetYamlConfig(file)
+    string_file := service.ReplaceVariables(params, string(file))
+    deploy, _ := service.GetYamlConfig([]byte(string_file))
     build := service.RunCommands(deploy, client, params["scenario"], mongo.CommitCredentials{mongo.RepositoryCredentials{params["user"], params["repo"]}, params["sha"]})
 
     http.Redirect(res, req, "/repos/"+params["user"]+"/"+params["repo"]+"/build/"+build.Id.Hex(), http.StatusFound)

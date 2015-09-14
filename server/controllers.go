@@ -281,5 +281,5 @@ func DeleteHook(w http.ResponseWriter, req *http.Request) {
     id, _ := strconv.Atoi(params["id"])
     client.Repositories.DeleteHook(params["user"], params["repo"], id)
 
-    http.Redirect(w, req, "/repos/" + user + "/" + params["repo"], http.StatusTemporaryRedirect)
+    http.Redirect(w, req, "/repos/" + params["user"] + "/" + params["repo"], http.StatusTemporaryRedirect)
 }

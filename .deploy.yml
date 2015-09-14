@@ -7,6 +7,8 @@ pull_request:
     - ssh: ls
     - ssh: wheris {{sha}}
     - status: success
+  onError:
+    - status: error
 push:
    branch: refs/heads/master
    host: root@188.166.34.149:22

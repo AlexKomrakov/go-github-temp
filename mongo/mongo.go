@@ -23,6 +23,7 @@ type DeployScenario struct {
 	Branch string
 	Host   string
 	Commands []map[string]string
+    OnError  []map[string]string
 }
 
 type Repository struct {

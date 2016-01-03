@@ -1,4 +1,9 @@
-.idea/
+/.idea
 *.log
-bin.exe
-gin-bin.exe
+/.yo-rc.json
+/.jscsrc
+/.jshintrc
+/test
+/bower_components
+/bin.exe
+/gin-bin.exe

@@ -1,0 +1,23 @@
+{
+  "name": "gohub",
+  "homepage": "https://github.com/alexkomrakov/gohub",
+  "authors": [
+    "AlexKomrakov <alexkomrakov@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "moduleType": [],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "uikit": "~2.24.3",
+    "angular": "angularjs#~1.4.8",
+    "angular-resource": "~1.4.8"
+  }
+}

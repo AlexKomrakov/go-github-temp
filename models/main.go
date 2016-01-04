@@ -51,6 +51,7 @@ type CommandResponse struct {
 }
 
 func init() {
+	// TODO Вынести в конфиг-файл
 	orm, err := xorm.NewEngine("sqlite3", Db_file)
 	if err != nil {
 		panic(err)

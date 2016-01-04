@@ -6,6 +6,7 @@ import (
 	"strings"
 	"github.com/google/go-github/github"
 	"github.com/alexkomrakov/gohub/mongo"
+	"github.com/alexkomrakov/gohub/models"
 )
 
 func ProcessHook(event, body string) {
@@ -28,7 +29,7 @@ func ProcessHook(event, body string) {
 		panic("Not supported event: " + event)
 	}
 
-	token       := mongo.GetToken(params["user"])
+	token, _    := models.GetToken(params["user"])
 	client      := GetGithubClient(token)
 	file, _     := GetFileContent(client, params["user"], params["repo"], params["sha"], GetServerConfig().DeployFile)
 	string_file := ReplaceVariables(params, string(file))
@@ -53,7 +54,7 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
 	build.Store()
 
 	config := deploy[event]
-	server := mongo.Server{User: commit_credentials.Login, User_host: config.Host}.Find()
+	server := models.Server{User: commit_credentials.Login, User_host: config.Host}.Find()
     has_error := false
     error := ""
     for _, command := range config.Commands {
@@ -106,7 +107,7 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
 	return
 }
 
-func ExecSshCommand(server mongo.Server, command string) (out string, err error) {
+func ExecSshCommand(server models.Server, command string) (out string, err error) {
 	client, err := server.Client()
 	if err != nil {
 		return

@@ -19,30 +19,18 @@ type DeployScenario struct {
     Error    []map[string]string
 }
 
-type RepositoryCredentials struct {
-	Login string `json:"login"`
-	Name  string `json:"name"`
-}
-func (r RepositoryCredentials) GetBuilds() (builds []Build, err error) {
-	err = getDb().C(builds_collection).Find(bson.M{"commitcredentials.repositorycredentials.login": r.Login, "commitcredentials.repositorycredentials.name": r.Name}).Sort("-_id").All(&builds)
-	return
-}
-
-type CommitCredentials struct {
-	RepositoryCredentials
-	SHA string `json:"sha"`
-}
 type Build struct {
-	CommitCredentials
 	Id               bson.ObjectId 			   `bson:"_id,omitempty" json:"id"`
-	DeployFile       map[string]DeployScenario `json:"deployScenario"`
+	Login 			 string                    `json:"login"`
+	Name 			 string                    `json:"name"`
+	SHA  			 string                    `json:"sha"`
 	Event            string 				   `json:"event"`
 	Created_at       time.Time 				   `json:"created_at"`
+	DeployFile       map[string]DeployScenario `json:"deployScenario"`
 	CommandResponses []CommandResponse		   `bson:"commandresponses,omitempty" json:"commandResponses"`
 }
-func FindBuildById(id interface {}) (b Build, err error) {
-	err = getDb().C(builds_collection).Find(bson.M{"_id": bson.ObjectIdHex(id.(string))}).One(&b)
-
+func (r Build) GetBuilds() (builds []Build, err error) {
+	err = getDb().C(builds_collection).Find(bson.M{"login": r.Login, "name": r.Name}).Sort("-_id").All(&builds)
 	return
 }
 func (b Build) HasError() bool {
@@ -64,6 +52,11 @@ func (b *Build) AddCommand(c CommandResponse) (err error) {
 	b.CommandResponses = append(b.CommandResponses, c)
 
 	return getDb().C(builds_collection).Update(bson.M{"_id": b.Id}, bson.M{"$set": bson.M{"commandresponses": b.CommandResponses}})
+}
+func FindBuildById(id interface {}) (b Build, err error) {
+	err = getDb().C(builds_collection).Find(bson.M{"_id": bson.ObjectIdHex(id.(string))}).One(&b)
+
+	return
 }
 
 type CommandResponse struct {

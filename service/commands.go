@@ -36,7 +36,7 @@ func ProcessHook(event, body string) {
 	deploy, _   := GetYamlConfig([]byte(string_file))
 
 	if deploy[event].Branch == "" || deploy[event].Branch == params["branch"] {
-		RunCommands(deploy, client, event, mongo.CommitCredentials{mongo.RepositoryCredentials{params["user"], params["repo"]}, params["sha"]})
+		RunCommands(deploy, client, event, mongo.Build{Login: params["user"], Name: params["repo"], SHA: params["sha"]})
 	}
 }
 
@@ -49,12 +49,13 @@ func ReplaceVariables(params map[string]string, text string) string {
 	return text
 }
 
-func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, event string, commit_credentials mongo.CommitCredentials) (build mongo.Build) {
-	build = mongo.Build{CommitCredentials: commit_credentials, DeployFile: deploy, Event: event}
-	build.Store()
+func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, event string, current_build mongo.Build) (build mongo.Build) {
+	current_build.DeployFile = deploy
+	current_build.Event = event
+	current_build.Store()
 
 	config := deploy[event]
-	server := models.Server{User: commit_credentials.Login, User_host: config.Host}.Find()
+	server := models.Server{User: current_build.Login, User_host: config.Host}.Find()
     has_error := false
     error := ""
     for _, command := range config.Commands {
@@ -64,12 +65,12 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
             }
             error = ""
 			if commandType == "status" {
-				out, err := SetGitStatus(client, commit_credentials.Login, commit_credentials.Name, commit_credentials.SHA, actionStr)
+				out, err := SetGitStatus(client, current_build.Login, current_build.Name, current_build.SHA, actionStr)
                 if err != nil {
                     error = err.Error()
                     has_error = true
                 }
-				build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
+				current_build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
 			}
 			if commandType == "ssh" {
 				out, err := ExecSshCommand(server, actionStr)
@@ -77,7 +78,7 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
                     error = err.Error()
                     has_error = true
                 }
-				build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
+				current_build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
 			}
 		}
 	}
@@ -87,18 +88,18 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
             for commandType, actionStr := range command {
                 error = ""
                 if commandType == "status" {
-                    out, err := SetGitStatus(client, commit_credentials.Login, commit_credentials.Name, commit_credentials.SHA, actionStr)
+                    out, err := SetGitStatus(client, current_build.Login, current_build.Name, current_build.SHA, actionStr)
                     if err != nil {
                         error = err.Error()
                     }
-                    build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
+					current_build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
                 }
                 if commandType == "ssh" {
                     out, err := ExecSshCommand(server, actionStr)
                     if err != nil {
                         error = err.Error()
                     }
-                    build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
+					current_build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
                 }
             }
         }

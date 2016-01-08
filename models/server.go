@@ -71,10 +71,3 @@ func GetSshClient(user_host, password string) (client *ssh.Client, err error) {
 
 	return client, err
 }
-
-func init() {
-	err := Orm.CreateTables(&Server{})
-	if err != nil {
-		panic(err)
-	}
-}

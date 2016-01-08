@@ -3,7 +3,6 @@ import (
 	"net/http"
 	"github.com/gorilla/mux"
 	"github.com/goincremental/negroni-sessions"
-	"github.com/alexkomrakov/gohub/mongo"
 	"github.com/alexkomrakov/gohub/models"
 	"github.com/alexkomrakov/gohub/service"
 	"strings"
@@ -17,7 +16,7 @@ func ShowRepo(res http.ResponseWriter, req *http.Request) {
 	token, _ := models.GetToken(user)
 	client := service.GetGithubClient(token)
 	repo, _, _ := client.Repositories.Get(params["user"], params["repo"])
-	builds, _ := mongo.Build{Login: params["user"], Name: params["repo"]}.GetBuilds()
+	builds, _ := models.Build{Login: params["user"], Name: params["repo"]}.GetBuilds()
 	hooks, _, _ := client.Repositories.ListHooks(params["user"], params["repo"], &github.ListOptions{})
 	branches, _, _ := client.Git.ListRefs(params["user"], params["repo"], &github.ReferenceListOptions{})
 	var filtered_branches []github.Reference

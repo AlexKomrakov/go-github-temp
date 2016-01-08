@@ -72,7 +72,7 @@
         {{ range $key, $value := .Data.Builds }}
         <tr>
             <td>
-                <a href="/repos/{{$.Data.Repo.Owner.Login}}/{{$.Data.Repo.Name}}/build/{{$value.Id.Hex}}">
+                <a href="/repos/{{$.Data.Repo.Owner.Login}}/{{$.Data.Repo.Name}}/build/{{$value.Id}}">
                     {{ $value.Created_at }}
                 </a>
             </td>

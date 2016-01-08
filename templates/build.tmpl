@@ -11,7 +11,7 @@
         </tr>
         </thead>
         <tbody>
-        {{ range $key, $value := .Data.Build.CommandResponses }}
+        {{ range $key, $value := .Data.CommandResponses }}
         <tr>
             <td><strong>{{ $key }}</strong></td>
             <td><strong>{{ $value.Type }}: {{ $value.Command }}</strong></td>

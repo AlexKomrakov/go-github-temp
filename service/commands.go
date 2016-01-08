@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"strings"
 	"github.com/google/go-github/github"
-	"github.com/alexkomrakov/gohub/mongo"
 	"github.com/alexkomrakov/gohub/models"
 )
 
@@ -36,7 +35,7 @@ func ProcessHook(event, body string) {
 	deploy, _   := GetYamlConfig([]byte(string_file))
 
 	if deploy[event].Branch == "" || deploy[event].Branch == params["branch"] {
-		RunCommands(deploy, client, event, mongo.Build{Login: params["user"], Name: params["repo"], SHA: params["sha"]})
+		RunCommands(deploy, client, event, models.Build{Login: params["user"], Name: params["repo"], SHA: params["sha"]})
 	}
 }
 
@@ -49,8 +48,9 @@ func ReplaceVariables(params map[string]string, text string) string {
 	return text
 }
 
-func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, event string, current_build mongo.Build) (build mongo.Build) {
-	current_build.DeployFile = deploy
+func RunCommands(deploy map[string]models.DeployScenario, client *github.Client, event string, current_build models.Build) (build models.Build) {
+	// TODO save deploy file assigned to build
+	// current_build.DeployFile = deploy
 	current_build.Event = event
 	current_build.Store()
 
@@ -70,7 +70,7 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
                     error = err.Error()
                     has_error = true
                 }
-				current_build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
+				current_build.AddCommand(models.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
 			}
 			if commandType == "ssh" {
 				out, err := ExecSshCommand(server, actionStr)
@@ -78,7 +78,7 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
                     error = err.Error()
                     has_error = true
                 }
-				current_build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
+				current_build.AddCommand(models.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
 			}
 		}
 	}
@@ -92,14 +92,14 @@ func RunCommands(deploy map[string]mongo.DeployScenario, client *github.Client, 
                     if err != nil {
                         error = err.Error()
                     }
-					current_build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
+					current_build.AddCommand(models.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
                 }
                 if commandType == "ssh" {
                     out, err := ExecSshCommand(server, actionStr)
                     if err != nil {
                         error = err.Error()
                     }
-					current_build.AddCommand(mongo.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
+					current_build.AddCommand(models.CommandResponse{Type: commandType, Command: actionStr, Success: out, Error: error})
                 }
             }
         }

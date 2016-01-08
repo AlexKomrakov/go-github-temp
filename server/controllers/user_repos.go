@@ -1,4 +1,5 @@
 package controllers
+
 import (
 	"net/http"
 	"github.com/goincremental/negroni-sessions"
@@ -7,10 +8,10 @@ import (
 )
 
 func UserRepos(res http.ResponseWriter, req *http.Request) {
-	session := sessions.GetSession(req)
-	user := session.Get("user").(string)
+	session  := sessions.GetSession(req)
+	user     := session.Get("user").(string)
 	token, _ := models.GetToken(user)
-	client := service.GetGithubClient(token)
+	client   := service.GetGithubClient(token)
 	github_repos, _, _ := client.Repositories.List("", nil)
 
 	Render(res, req, "repos", map[string]interface{}{"Github": github_repos})

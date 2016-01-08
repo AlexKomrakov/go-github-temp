@@ -4,7 +4,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
     "golang.org/x/oauth2"
-	"github.com/alexkomrakov/gohub/mongo"
+	"github.com/alexkomrakov/gohub/models"
 )
 
 const (
@@ -39,7 +39,7 @@ func GetServerConfig() (config ServerConfig) {
 	return
 }
 
-func GetYamlConfig(file []byte) (config map[string]mongo.DeployScenario, err error) {
+func GetYamlConfig(file []byte) (config map[string]models.DeployScenario, err error) {
 	err = yaml.Unmarshal(file, &config)
 	return
 }

@@ -26,10 +26,3 @@ func GetToken(user string) (string, error) {
 
 	return token.Token, err
 }
-
-func init() {
-	err := Orm.CreateTables(&Token{})
-	if err != nil {
-		panic(err)
-	}
-}

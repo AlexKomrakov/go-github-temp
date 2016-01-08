@@ -2,7 +2,7 @@ package models
 
 import (
 	"testing"
-	"fmt"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestServerStore(t *testing.T) {
@@ -13,11 +13,14 @@ func TestServerStore(t *testing.T) {
 		Checked: true,
 	}
 	server.Store()
-	server.Store()
 
-	result := server.Find()
-	fmt.Println(result)
+	new_server := Server{User: "test", User_host: "user:host"}
+	result, err := new_server.FindOne()
+	assert.True(t, result)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, new_server.Password)
 
-	count, _ := server.Delete()
-	fmt.Println(count)
+	n, err := server.Delete()
+	assert.NotEmpty(t, n)
+	assert.Nil(t, err)
 }

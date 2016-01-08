@@ -13,7 +13,11 @@ func ShowRepo(res http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	session := sessions.GetSession(req)
 	user := session.Get("user").(string)
-	token, _ := models.GetToken(user)
+
+	token_model := models.Token{User: user}
+	token_model.FindOne()
+	token := token_model.Token
+
 	client := service.GetGithubClient(token)
 	repo, _, _ := client.Repositories.Get(params["user"], params["repo"])
 	builds, _ := models.Build{Login: params["user"], Name: params["repo"]}.GetBuilds()

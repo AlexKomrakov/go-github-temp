@@ -28,7 +28,10 @@ func ProcessHook(event, body string) {
 		panic("Not supported event: " + event)
 	}
 
-	token, _    := models.GetToken(params["user"])
+	token_model := models.Token{User: params["user"]}
+	token_model.FindOne()
+	token := token_model.Token
+
 	client      := GetGithubClient(token)
 	file, _     := GetFileContent(client, params["user"], params["repo"], params["sha"], GetServerConfig().DeployFile)
 	string_file := ReplaceVariables(params, string(file))
@@ -53,9 +56,14 @@ func RunCommands(deploy map[string]models.DeployScenario, client *github.Client,
 	// current_build.DeployFile = deploy
 	current_build.Event = event
 	current_build.Store()
-
 	config := deploy[event]
-	server := models.Server{User: current_build.Login, User_host: config.Host}.Find()
+
+	server := models.Server{User: current_build.Login, User_host: config.Host}
+	_, err := server.FindOne()
+	if err != nil {
+		panic(err)
+	}
+
     has_error := false
     error := ""
     for _, command := range config.Commands {

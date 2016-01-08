@@ -55,7 +55,8 @@ func process_login(res http.ResponseWriter, req *http.Request, user *github.User
     if user != nil {
         session := sessions.GetSession(req)
         session.Set("user", user.Login)
-        models.Token{User: *user.Login, Token: token}.Store()
+        token := models.Token{User: *user.Login, Token: token}
+        token.Store()
 
         http.Redirect(res, req, "/", http.StatusFound)
     }

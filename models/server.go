@@ -23,24 +23,16 @@ func GetServers(user string) (servers []Server) {
 	return
 }
 
-func (r Server) Store() {
-	_, err := Orm.Insert(&r)
-	if err != nil {
-		panic(err)
-	}
+func (r *Server) Store() (int64, error) {
+	return Orm.Insert(r)
 }
 
 func (r Server) Delete() (int64, error) {
 	return Orm.Delete(&r)
 }
 
-func (r Server) Find() Server {
-	_, err := Orm.Get(&r)
-	if err != nil {
-		panic(err)
-	}
-
-	return r
+func (r *Server) FindOne() (bool, error) {
+	return Orm.Get(r)
 }
 
 func (s Server) Check() bool {

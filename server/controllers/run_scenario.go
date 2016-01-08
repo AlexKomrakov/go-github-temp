@@ -13,7 +13,11 @@ func RunScenario(res http.ResponseWriter, req *http.Request) {
 	params      := mux.Vars(req)
 	session     := sessions.GetSession(req)
 	user        := session.Get("user").(string)
-	token, _    := models.GetToken(user)
+
+	token_model := models.Token{User: user}
+	token_model.FindOne()
+	token := token_model.Token
+
 	client      := service.GetGithubClient(token)
 	file, _     := service.GetFileContent(client, params["user"], params["repo"], params["sha"], config.DeployFile)
 	string_file := service.ReplaceVariables(params, string(file))

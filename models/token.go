@@ -5,24 +5,18 @@ type Token struct {
 	Token string `json:"token"`
 }
 
-func (t Token) Store() {
+func (t *Token) Store() (int64, error) {
 	// TODO Убрать костыль
 	// Удаляем существующий токен перед перезаписью
 	t.Delete()
 
-	_, err := Orm.Insert(&t)
-	if err != nil {
-		panic(err)
-	}
+	return Orm.Insert(t)
 }
 
 func (t Token) Delete() (int64, error) {
 	return Orm.Delete(&t)
 }
 
-func GetToken(user string) (string, error) {
-	token := Token{User: user}
-	_, err := Orm.Get(&token)
-
-	return token.Token, err
+func (t *Token) FindOne() (bool, error) {
+	return Orm.Get(t)
 }

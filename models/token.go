@@ -8,7 +8,7 @@ type Token struct {
 func (t *Token) Store() (int64, error) {
 	// TODO Убрать костыль
 	// Удаляем существующий токен перед перезаписью
-	t.Delete()
+	Token{User: t.User}.Delete()
 
 	return Orm.Insert(t)
 }

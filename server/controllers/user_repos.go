@@ -5,7 +5,6 @@ import (
 	"github.com/goincremental/negroni-sessions"
 	"github.com/alexkomrakov/gohub/service"
 	"github.com/alexkomrakov/gohub/models"
-	"fmt"
 )
 
 func UserRepos(res http.ResponseWriter, req *http.Request) {

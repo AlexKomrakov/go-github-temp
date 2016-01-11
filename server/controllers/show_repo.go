@@ -19,9 +19,9 @@ func ShowRepo(res http.ResponseWriter, req *http.Request) {
 	token := token_model.Token
 
 	client := service.GetGithubClient(token)
-	repo, _, _ := client.Repositories.Get(params["user"], params["repo"])
-	builds, _ := models.Build{Login: params["user"], Name: params["repo"]}.GetBuilds()
-	hooks, _, _ := client.Repositories.ListHooks(params["user"], params["repo"], &github.ListOptions{})
+	repo, _, _     := client.Repositories.Get(params["user"], params["repo"])
+	builds, _      := models.Repository{Login: params["user"], Name: params["repo"]}.Builds()
+	hooks, _, _    := client.Repositories.ListHooks(params["user"], params["repo"], &github.ListOptions{})
 	branches, _, _ := client.Git.ListRefs(params["user"], params["repo"], &github.ReferenceListOptions{})
 	var filtered_branches []github.Reference
 	for _, branch := range branches {

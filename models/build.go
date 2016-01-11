@@ -3,7 +3,8 @@ package models
 import "time"
 
 type Build struct {
-	Id               int64 			           `bson:"_id,omitempty" json:"id"`
+	Id               int64 			           `json:"id"`
+	RepositoryId     int64					   `json:"repository_id" xorm:"index"`
 	Login 			 string                    `json:"login"`
 	Name 			 string                    `json:"name"`
 	SHA  			 string                    `json:"sha"`
@@ -15,20 +16,12 @@ type Build struct {
 }
 
 type CommandResponse struct {
-	Id      int64   `bson:"_id,omitempty" json:"id"`
-	BuildId int64   `bson:"_id,omitempty" json:"id" xorm:"index"`
-	Type    string  `bson:"type,omitempty"`
-	Command string  `bson:"command,omitempty"`
-	Error   string  `bson:"error,omitempty"`
-	Success string  `bson:"success,omitempty"`
-}
-
-func (r Build) GetBuilds() (builds []Build, err error) {
-	// TODO refactor method
-	// TODO add sorting
-	// err = getDb().C(builds_collection).Find(bson.M{"login": r.Login, "name": r.Name}).Sort("-_id").All(&builds)
-	err = Orm.Find(&builds, &Build{Login: r.Login, Name: r.Name})
-	return
+	Id      int64   `json:"id"`
+	BuildId int64   `json:"build_id" xorm:"index"`
+	Type    string
+	Command string
+	Error   string
+	Success string
 }
 func (b Build) CommandResponses() (command_responses []CommandResponse, err error) {
 	// TODO check sorting order

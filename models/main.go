@@ -18,7 +18,7 @@ func init() {
 	}
 	Orm = orm
 
-	err = Orm.CreateTables(&Build{}, &CommandResponse{}, &Server{}, &Token{})
+	err = Orm.CreateTables(&Build{}, &CommandResponse{}, &Server{}, &Token{}, &Repository{})
 	if err != nil {
 		panic(err)
 	}

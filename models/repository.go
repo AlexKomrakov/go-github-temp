@@ -1,9 +1,10 @@
 package models
 
 type Repository struct {
-	Id    int64  `json:"id"`
-	Login string `json:"login"`
-	Name  string `json:"name"`
+	Id      int64  `json:"id"`
+	Login   string `json:"login"`
+	Name    string `json:"name"`
+	Enabled bool   `json:"enabled"`
 }
 
 func (repository Repository) Builds() (builds []Build, err error) {

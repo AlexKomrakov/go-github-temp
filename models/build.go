@@ -1,12 +1,12 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Build struct {
 	Id               int64 			           `json:"id"`
 	RepositoryId     int64					   `json:"repository_id" xorm:"index"`
-	Login 			 string                    `json:"login"`
-	Name 			 string                    `json:"name"`
 	SHA  			 string                    `json:"sha"`
 	Event            string 				   `json:"event"`
 	// TODO add xorm created_at

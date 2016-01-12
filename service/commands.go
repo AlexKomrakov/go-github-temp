@@ -37,8 +37,14 @@ func ProcessHook(event, body string) {
 	string_file := ReplaceVariables(params, string(file))
 	deploy, _   := GetYamlConfig([]byte(string_file))
 
+	repository  := models.Repository{Login: params["user"], Name: params["repo"]}
+	success, err := repository.FindOne()
+	if success == false {
+		panic(err)
+	}
+
 	if deploy[event].Branch == "" || deploy[event].Branch == params["branch"] {
-		RunCommands(deploy, client, event, models.Build{Login: params["user"], Name: params["repo"], SHA: params["sha"]})
+		RunCommands(deploy, client, event, models.Build{RepositoryId: repository.Id, SHA: params["sha"]})
 	}
 }
 
@@ -52,14 +58,20 @@ func ReplaceVariables(params map[string]string, text string) string {
 }
 
 func RunCommands(deploy map[string]models.DeployScenario, client *github.Client, event string, current_build models.Build) (build models.Build) {
+	repository   := models.Repository{Id: current_build.RepositoryId}
+	success, err := repository.FindOne()
+	if success == false {
+		panic(err)
+	}
+
 	// TODO save deploy file assigned to build
 	// current_build.DeployFile = deploy
 	current_build.Event = event
 	current_build.Store()
 	config := deploy[event]
 
-	server := models.Server{User: current_build.Login, User_host: config.Host}
-	_, err := server.FindOne()
+	server := models.Server{User: repository.Login, User_host: config.Host}
+	_, err = server.FindOne()
 	if err != nil {
 		panic(err)
 	}
@@ -73,7 +85,7 @@ func RunCommands(deploy map[string]models.DeployScenario, client *github.Client,
             }
             error = ""
 			if commandType == "status" {
-				out, err := SetGitStatus(client, current_build.Login, current_build.Name, current_build.SHA, actionStr)
+				out, err := SetGitStatus(client, repository.Login, repository.Name, current_build.SHA, actionStr)
                 if err != nil {
                     error = err.Error()
                     has_error = true
@@ -96,7 +108,7 @@ func RunCommands(deploy map[string]models.DeployScenario, client *github.Client,
             for commandType, actionStr := range command {
                 error = ""
                 if commandType == "status" {
-                    out, err := SetGitStatus(client, current_build.Login, current_build.Name, current_build.SHA, actionStr)
+                    out, err := SetGitStatus(client, repository.Login, repository.Name, current_build.SHA, actionStr)
                     if err != nil {
                         error = err.Error()
                     }

@@ -2,6 +2,8 @@ package models
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/google/go-github/github"
+	"fmt"
 )
 
 func TestRepository(t *testing.T) {
@@ -26,4 +28,19 @@ func TestRepository(t *testing.T) {
 	assert.NotEmpty(t, third_repo.Id)
 
 	defer Repository{Login: "owner_login"}.Delete()
+}
+
+func TestGetGithubRepositoriesIntersection(t *testing.T) {
+	name  := "name"
+	login := "AlexKomrakov"
+
+	repo := Repository{Login: login, Name: name}
+	repo.Store()
+
+	user  := github.User{Login: &login}
+	github_repos := []github.Repository{{Name: &name, Owner: &user}}
+	repos, _ := GetGithubRepositoriesIntersection(github_repos)
+	assert.NotEmpty(t, repos)
+
+	defer Repository{Login: login}.Delete()
 }

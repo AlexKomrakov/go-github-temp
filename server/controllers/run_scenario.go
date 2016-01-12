@@ -22,7 +22,14 @@ func RunScenario(res http.ResponseWriter, req *http.Request) {
 	file, _     := service.GetFileContent(client, params["user"], params["repo"], params["sha"], config.DeployFile)
 	string_file := service.ReplaceVariables(params, string(file))
 	deploy, _   := service.GetYamlConfig([]byte(string_file))
-	build       := service.RunCommands(deploy, client, params["scenario"], models.Build{Login: params["user"], Name: params["repo"], SHA: params["sha"]})
+
+	repository  := models.Repository{Login: params["user"], Name: params["repo"]}
+	success, err := repository.FindOne()
+	if success == false {
+		panic(err)
+	}
+
+	build := service.RunCommands(deploy, client, params["scenario"], models.Build{RepositoryId: repository.Id, SHA: params["sha"]})
 
 	http.Redirect(res, req, "/repos/" + params["user"] + "/" + params["repo"] + "/build/" + strconv.FormatInt(build.Id, 10), http.StatusFound)
 }

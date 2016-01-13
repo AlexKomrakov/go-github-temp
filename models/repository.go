@@ -5,7 +5,7 @@ type Repository struct {
 	Id      int64  `json:"id"`
 	Login   string `json:"login"`
 	Name    string `json:"name"`
-	Enabled bool   `json:"enabled"`
+	Enabled bool   `json:"enabled" xorm:"'enabled'"`
 }
 
 // TODO Add sorting order
@@ -18,6 +18,10 @@ func (repository Repository) Builds() (builds []Build, err error) {
 // TODO Добавить проверку на уникальность репозиториев
 func (repository *Repository) Store() (int64, error) {
 	return Orm.Insert(repository)
+}
+
+func (repository Repository) Update() (int64, error) {
+	return Orm.UseBool().Id(repository.Id).Update(repository)
 }
 
 func (repository *Repository) FindOne() (bool, error) {
@@ -41,7 +45,7 @@ func (repository Repository) Delete() (int64, error) {
 func GetGithubRepositoriesIntersection(github_repos []github.Repository) (repositories []Repository, err error) {
 	for _, github_repo := range github_repos {
 		repo := &Repository{Login: *github_repo.Owner.Login, Name: *github_repo.Name};
-		success, err := repo.FindOne()
+		success, err := repo.FindOrCreate()
 		if err != nil {
 			return repositories, err
 		}

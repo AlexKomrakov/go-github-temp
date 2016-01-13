@@ -3,7 +3,6 @@ import (
 	"testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/google/go-github/github"
-	"fmt"
 )
 
 func TestRepository(t *testing.T) {
@@ -12,10 +11,18 @@ func TestRepository(t *testing.T) {
 	assert.Equal(t, 1, number)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, repo.Id)
+	assert.False(t, repo.Enabled)
+
+	repo.Enabled = true
+	number, err = repo.Update()
+	assert.Equal(t, 1, number)
+	assert.Nil(t, err)
+	assert.True(t, repo.Enabled)
 
 	second_repo := Repository{Login: "owner_login", Name: "repo_name"}
 	second_repo.FindOne()
 	assert.Equal(t, second_repo.Id, repo.Id)
+	assert.True(t, second_repo.Enabled)
 
 	third_repo := Repository{Login: "owner_login", Name: "not_existing_repo_name"}
 	success, err := third_repo.FindOne()

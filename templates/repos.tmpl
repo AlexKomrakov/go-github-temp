@@ -8,15 +8,22 @@
         <tr>
             <th width="50%">Name</th>
             <th>URL</th>
-            <!--<th class="uk-text-right" width="10%">Menu</th>-->
+            <th>Active</th>
         </tr>
         </thead>
         <tbody>
-        {{ range $key, $value := .Data.Github }}
+        {{ range $key, $value := .Data.Gohub }}
         <tr>
             <td>{{ $value.Name }}</td>
-            <td><a href="/repos/{{$value.Owner.Login }}/{{ $value.Name }}">{{ $value.Owner.Login }}/{{ $value.Name }}</a></td>
-            <!--<td class="uk-text-right"><a class="uk-button uk-button-danger" href="/repos/{{ $value.Owner.Login }}/{{ $value.Name }}/delete"><i class="uk-icon-times"></i></a></td>-->
+            <td><a href="/repos/{{$value.Login }}/{{ $value.Name }}">{{ $value.Login }}/{{ $value.Name }}</a></td>
+            <td>
+                {{ if $value.Enabled }}
+                <span class="uk-badge uk-badge-success">Active</span>
+                <a href="/repos/{{$value.Login }}/{{ $value.Name }}/enable">Disable</a>
+                {{ else }}
+                <a href="/repos/{{$value.Login }}/{{ $value.Name }}/enable">Enable</a>
+                {{ end }}
+            </td>
         </tr>
         {{ end }}
         </tbody>

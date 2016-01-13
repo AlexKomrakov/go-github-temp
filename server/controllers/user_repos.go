@@ -19,6 +19,7 @@ func UserRepos(res http.ResponseWriter, req *http.Request) {
 	token := token_model.Token
 	client   := service.GetGithubClient(token)
 	github_repos, _, _ := client.Repositories.List("", nil)
+	repos, _ := models.GetGithubRepositoriesIntersection(github_repos)
 
-	Render(res, req, "repos", map[string]interface{}{"Github": github_repos})
+	Render(res, req, "repos", map[string]interface{}{"Github": github_repos, "Gohub": repos})
 }

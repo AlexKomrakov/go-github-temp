@@ -18,7 +18,7 @@
             <td><a href="/repos/{{$value.Login }}/{{ $value.Name }}">{{ $value.Login }}/{{ $value.Name }}</a></td>
             <td>
                 {{ if $value.Enabled }}
-                <span class="uk-badge uk-badge-success">Active</span>
+                <!--<span class="uk-badge uk-badge-success">Active</span>-->
                 <a href="/repos/{{$value.Login }}/{{ $value.Name }}/enable">Disable</a>
                 {{ else }}
                 <a href="/repos/{{$value.Login }}/{{ $value.Name }}/enable">Enable</a>
